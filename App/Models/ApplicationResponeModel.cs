@@ -34,6 +34,8 @@ namespace App.Models
         public string RefCode { get; set; }
         public string? OU_Code { get; set; }
         public string? loanTypeCate { get; set; }
+        public string? DeliveryFlag { get; set; }
+        public string? DeliveryDate { get; set; }
     }
 
 

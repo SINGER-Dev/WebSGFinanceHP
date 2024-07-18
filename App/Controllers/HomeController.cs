@@ -233,9 +233,8 @@ namespace App.Controllers
                         _ApplicationResponeModel.OU_Code = row["OU_Code"].ToString();
                         _ApplicationResponeModel.loanTypeCate = row["loanTypeCate"].ToString();
 
-                        
-
-
+                        _ApplicationResponeModel.DeliveryFlag = row["DeliveryFlag"].ToString();
+                        _ApplicationResponeModel.DeliveryDate = row["DeliveryDate"].ToString();
 
 
                         string datenowText = DateTime.Now.ToString("yyyy-MM-dd", new CultureInfo("en-US"));

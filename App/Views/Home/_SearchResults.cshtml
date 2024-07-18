@@ -118,43 +118,21 @@
 
                          <td>
 
-                            @if (result.newnum == "เรียบร้อย")
+                            @if (result.DeliveryFlag == "จัดส่งสินค้าเรียบร้อย")
                             {
-                                <B>NewSale : </B>
-
-                                <span class="badge bg-success">@result.newnum</span>
-                                @if (result.signedStatus == "เรียบร้อย" && result.statusReceived == "รับสินค้าแล้ว" && (result.newnum != "เรียบร้อย" && result.paynum != "เรียบร้อย") && result.OU_Code != "STL")
-                                {
-                                    <i class="GetAddTNewSalesNewSGFinance fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
-                                }
+                                <B>DeliveryFlag : </B>
+                                <span class="badge bg-success">@result.DeliveryFlag</span>
                                 <br>
                             }
                             else
                             {
-                                <B>NewSale : </B>
-
-                                <span class="badge bg-warning" style="color:#000">@result.newnum</span>
-                                @if (result.signedStatus == "เรียบร้อย" && result.statusReceived == "รับสินค้าแล้ว" && (result.newnum != "เรียบร้อย" && result.paynum != "เรียบร้อย") && result.OU_Code != "STL")
-                                {
-                                    <i class="GetAddTNewSalesNewSGFinance fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
-                                }
+                                <B>DeliveryFlag : </B>
+                                <span class="badge bg-warning" style="color:#000">@result.DeliveryFlag</span>
                                 <br>
                             }
 
-                            @if (result.paynum == "เรียบร้อย")
-                            {
-                                <B>NewPayment : </B>
+                            <B>DeliveryDate : @result.DeliveryDate</B>
 
-                                <span class="badge bg-success">@result.paynum</span>
-                            }
-                            else
-                            {
-                                <B>NewPayment : </B>
-
-                                <span class="badge bg-warning" style="color:#000">@result.paynum</span>
-                            }
-
-    
                         </td>
 
                     </tr>
