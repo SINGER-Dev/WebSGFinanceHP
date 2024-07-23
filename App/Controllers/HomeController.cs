@@ -57,6 +57,19 @@ namespace App.Controllers
             return View();
         }
 
+        public IActionResult changePayment()
+        {
+            var EMP_CODE = HttpContext.Session.GetString("EMP_CODE");
+            if (EMP_CODE == null)
+            {
+                return Redirect("/Login");
+            }
+            ViewBag.EMP_CODE = HttpContext.Session.GetString("EMP_CODE");
+            ViewBag.FullName = HttpContext.Session.GetString("FullName");
+            return View();
+        }
+
+        
         public IActionResult GetApplicationHistory()
         {
             var EMP_CODE = HttpContext.Session.GetString("EMP_CODE");
