@@ -51,6 +51,71 @@ $(document).ready(function () {
         });
     });
 
+
+    $("#btnFormChangeDownPayment").click(function (e) {
+
+        checkSession();
+
+        e.preventDefault();
+
+        if ($.trim($('#ref1').val()) == "" || $.trim($('#ref2').val()) == "") {
+            Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "กรุณากรอกข้อมูลให้ครบถ้วน"
+            })
+        }
+        else {
+
+            Swal.fire({
+                title: "ยืนยันการทำรายการ",
+                showCancelButton: true,
+                confirmButtonText: "ยืนยัน",
+                cancelButtonText: "ออก",
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    $('#btnFormChangeDownPayment').prop("disabled", true);
+                    // add spinner to button
+                    $('#btnFormChangeDownPayment').html(
+                        ' <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span> Loading...'
+                    );
+
+                    var formData = $("#FormChangeDownPayment").serialize(); // Serialize form data
+                    $.ajax({
+                        url: "/Home/ApiChangePayment", // Action URL
+                        type: "POST", // Method (POST in this case)
+                        data: formData,
+                        success: function (result) {
+                            if (result == "") {
+                                Swal.fire({
+                                    title: "ยืนยันทำรายการ!",
+                                    text: "ยืนยันทำรายการสำเร็จ",
+                                    icon: "success"
+                                }).then(function () {
+                                    // Redirect the user
+                                    window.location.href = "/";
+                                });
+                            }
+                            else {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: "Oops...",
+                                    text: result
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                        }
+                    });
+                }
+            });
+        }
+    });
+
     $("#btnFetch2").click(function (e) {
 
         checkSession();

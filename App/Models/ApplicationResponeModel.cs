@@ -36,6 +36,8 @@ namespace App.Models
         public string? loanTypeCate { get; set; }
         public string? DeliveryFlag { get; set; }
         public string? DeliveryDate { get; set; }
+        public string? Ref4 { get; set; }
+        
     }
 
 

@@ -1,0 +1,38 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+
+@model List<ApplicationResponeModel>
+<form class="row g-3 pt-3" id="FormChangeDownPayment" asp-action="ApiChangePayment" method="post">
+<div class="card text-center">
+    <div class="card-header">
+        ChangeDownPayment
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-4">
+                <select class="form-select select-field" id="ref1" required disabled>
+                    <option value="@ViewBag.Ref4" selected>@ViewBag.ApplicationCode</option>
+                </select>
+
+            </div>
+            <div class="col-4"><i class="fa-solid fa-circle-right fa-xl"></i></div>
+            <div class="col-4">
+                    <select class="form-select select-field" id="ref2" required>
+                    <option value="">กรุณาเลือกใบคำขอ</option>
+                    @foreach (var result in Model)
+                    {
+                        <option value="@result.Ref4">@result.ApplicationCode</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer">
+            <button type="submit" class="btn btn-primary" id="btnFormChangeDownPayment">ยืนยันทำรายการ</button>
+    </div>
+</div>
+</form>

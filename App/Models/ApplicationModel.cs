@@ -95,6 +95,13 @@ namespace App.Models
     {
         public string? ApplicationCode { get; set; }
     }
+
+    public class ApiChangePayment
+    {
+        public string? ref1 { get; set; }
+        public string? ref2 { get; set; }
+    }
+    
     public class GetApplicationRespone
     {
         public string? statusCode { get; set; }

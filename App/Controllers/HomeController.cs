@@ -57,7 +57,7 @@ namespace App.Controllers
             return View();
         }
 
-        public IActionResult changePayment()
+        public IActionResult ChangePaymentDown(string ApplicationCode,string Ref4)
         {
             var EMP_CODE = HttpContext.Session.GetString("EMP_CODE");
             if (EMP_CODE == null)
@@ -66,7 +66,43 @@ namespace App.Controllers
             }
             ViewBag.EMP_CODE = HttpContext.Session.GetString("EMP_CODE");
             ViewBag.FullName = HttpContext.Session.GetString("FullName");
-            return View();
+
+            SqlConnection connection = new SqlConnection();
+            connection.ConnectionString = strConnString;
+
+
+            SqlCommand sqlCommand;
+            string strSQL = DATABASEK2 + ".[dbo].[GET_DATA_SGFINANCE_HP]";
+            sqlCommand = new SqlCommand(strSQL, connection);
+            sqlCommand.CommandType = CommandType.StoredProcedure;
+            sqlCommand.Parameters.AddWithValue("status", "CLOSING");
+            sqlCommand.Parameters.AddWithValue("ApplicationCodeNot", ApplicationCode);
+            SqlDataAdapter dtAdapter = new SqlDataAdapter();
+            dtAdapter.SelectCommand = sqlCommand;
+            DataTable dt = new DataTable();
+            dtAdapter.Fill(dt);
+            connection.Close();
+
+
+            List<ApplicationResponeModel> _ApplicationResponeModelMaster = new List<ApplicationResponeModel>();
+            if (dt.Rows.Count > 0)
+            {
+
+                foreach (DataRow row in dt.Rows)
+                {
+
+                    ApplicationResponeModel _ApplicationResponeModel = new ApplicationResponeModel();
+                    _ApplicationResponeModel.ApplicationCode = row["ApplicationCode"].ToString();
+                    _ApplicationResponeModel.Ref4 = row["Ref4"].ToString();
+                    
+                    _ApplicationResponeModelMaster.Add(_ApplicationResponeModel);
+                }
+            }
+
+            
+            ViewBag.Ref4 = Ref4;
+            ViewBag.ApplicationCode = ApplicationCode;
+            return View(_ApplicationResponeModelMaster);
         }
 
         
@@ -248,7 +284,8 @@ namespace App.Controllers
 
                         _ApplicationResponeModel.DeliveryFlag = row["DeliveryFlag"].ToString();
                         _ApplicationResponeModel.DeliveryDate = row["DeliveryDate"].ToString();
-
+                        _ApplicationResponeModel.Ref4 = row["Ref4"].ToString();
+                        
 
                         string datenowText = DateTime.Now.ToString("yyyy-MM-dd", new CultureInfo("en-US"));
 
@@ -361,7 +398,7 @@ namespace App.Controllers
                             client.DefaultRequestHeaders.Add("user", "DEV");
 
                             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                            HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/Service/C100_Status", content);
+                            HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/sgesig/Service/C100_Status", content);
                             int DeviceStatusCode = (int)responseDevice.StatusCode;
 
                             Log.Debug("API BODY RESPONE : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
@@ -638,7 +675,7 @@ namespace App.Controllers
                         client.DefaultRequestHeaders.Add("user", "DEV");
 
                         var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                        HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG+ "/Service/C100_Status", content);
+                        HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG+ "/sgesig/Service/C100_Status", content);
                         int DeviceStatusCode = (int)responseDevice.StatusCode;
 
                         Log.Debug("API BODY RESPONE : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
@@ -687,7 +724,7 @@ namespace App.Controllers
                     client.DefaultRequestHeaders.Add("user", "DEV");
 
                     var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                    HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/api/v2/GenEsignature", content);
+                    HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/sgesig/api/v2/GenEsignature", content);
                     int DeviceStatusCode = (int)responseDevice.StatusCode;
 
                     Log.Debug("API RESPONE : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
@@ -740,7 +777,7 @@ namespace App.Controllers
 
                         HttpResponseMessage responseDevice;
 
-                        responseDevice = await client.PostAsync(SGAPIESIG + "/SubmitSale", content);
+                        responseDevice = await client.PostAsync(SGAPIESIG + "/sgesig/SubmitSale", content);
 
 
                         int DeviceStatusCode = (int)responseDevice.StatusCode;
@@ -789,7 +826,7 @@ namespace App.Controllers
                     client.DefaultRequestHeaders.Add("user", "DEV");
 
                     var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                    HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/Service/RegisIMEI", content);
+                    HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/sgesig/Service/RegisIMEI", content);
                     int DeviceStatusCode = (int)responseDevice.StatusCode;
                     Log.Debug("API RETURN : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
                     if (responseDevice.IsSuccessStatusCode)
@@ -808,6 +845,48 @@ namespace App.Controllers
                 _RegisIMEIRespone.statusCode = ex.Message;
                 Log.Debug("RETURN : " + JsonConvert.SerializeObject(_RegisIMEIRespone));
                 return _RegisIMEIRespone;
+            }
+        }
+
+        [HttpPost]
+        public async Task<string> ApiChangePayment([FromBody] ApiChangePayment _ApiChangePayment)
+        {
+            string result = "";
+            try
+            {
+                Log.Debug("REQUEST : " + JsonConvert.SerializeObject(_ApiChangePayment));
+
+                var requestBody = new
+                {
+                    ref1 = _ApiChangePayment.ref1,
+                    ref2 = _ApiChangePayment.ref2,
+                    amount = "0.00"
+                };
+
+                using (HttpClient client = new HttpClient())
+                {
+                    string jsonBody = JsonConvert.SerializeObject(requestBody);
+
+                    client.DefaultRequestHeaders.Add("apikey", ApiKey);
+
+                    var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+                    HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/c100/v2/SgFinance/PaymentAdjust", content);
+                    int DeviceStatusCode = (int)responseDevice.StatusCode;
+                    Log.Debug("API RETURN : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
+                    if (responseDevice.IsSuccessStatusCode)
+                    {
+                        result = await responseDevice.Content.ReadAsStringAsync();
+                    }
+                }
+
+                Log.Debug("RETURN : " + result);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result = ex.Message;
+                Log.Debug("RETURN : " + result);
+                return result;
             }
         }
 
