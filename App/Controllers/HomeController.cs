@@ -98,11 +98,6 @@ namespace App.Controllers
                     _ApplicationResponeModelMaster.Add(_ApplicationResponeModel);
                 }
             }
-
-            
-            ViewBag.Ref4 = Ref4;
-            ViewBag.ApplicationCode = ApplicationCode;
-            return View(_ApplicationResponeModelMaster);
         }
 
         
