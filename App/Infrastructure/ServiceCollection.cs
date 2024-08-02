@@ -14,7 +14,7 @@ namespace App.Infrastructure
 						  .MinimumLevel.Override("System", LogEventLevel.Information)
 						  .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Error)
 						  .Enrich.FromLogContext()
-						  .WriteTo.File($"/tmp/sg-finance-esig.log",
+						  .WriteTo.File($"/tmp/WebSGFinanceHP.log",
 							  rollingInterval: RollingInterval.Day,
 							  rollOnFileSizeLimit: true,
 							  fileSizeLimitBytes: 10000000,

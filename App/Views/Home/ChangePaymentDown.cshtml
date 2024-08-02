@@ -14,14 +14,14 @@
     <div class="card-body">
         <div class="row">
             <div class="col-4">
-                <select class="form-select select-field" id="ref1" required disabled>
+                <select class="form-select select-field" id="ref1" name="ref1" required >
                     <option value="@ViewBag.Ref4" selected>@ViewBag.ApplicationCode</option>
                 </select>
 
             </div>
             <div class="col-4"><i class="fa-solid fa-circle-right fa-xl"></i></div>
             <div class="col-4">
-                    <select class="form-select select-field" id="ref2" required>
+                    <select class="form-select select-field" id="ref2" name="ref2" required>
                     <option value="">กรุณาเลือกใบคำขอ</option>
                     @foreach (var result in Model)
                     {

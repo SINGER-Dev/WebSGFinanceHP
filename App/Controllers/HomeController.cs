@@ -10,15 +10,18 @@ using Newtonsoft.Json;
 using System.Text;
 using RestSharp;
 using System.Globalization;
-using Microsoft.AspNetCore.Http;
-using System.Reflection.Emit;
+using Dapper;
+using System.Transactions;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace App.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        string strConnString, DATABASEK2, WSCANCEL, UrlEztax, UsernameEztax, PasswordEztax, ClientIdEztax, ApiKey, SGAPIESIG;
+        string strConnString, DATABASEK2, WSCANCEL, UrlEztax, UsernameEztax, PasswordEztax, ClientIdEztax, ApiKey, SGAPIESIG, DATABASESG;
 
         public HomeController(ILogger<HomeController> logger)
         {
@@ -38,11 +41,10 @@ namespace App.Controllers
             UsernameEztax = builder.GetConnectionString("UsernameEztax");
             PasswordEztax = builder.GetConnectionString("PasswordEztax");
             ClientIdEztax = builder.GetConnectionString("ClientIdEztax");
-
             ApiKey = builder.GetConnectionString("ApiKey");
             SGAPIESIG = builder.GetConnectionString("SGAPIESIG");
-
-
+            DATABASESG = builder.GetConnectionString("DATABASESG");
+            
         }
 
         public IActionResult Index()
@@ -57,7 +59,7 @@ namespace App.Controllers
             return View();
         }
 
-        public IActionResult ChangePaymentDown(string ApplicationCode,string Ref4)
+        public async Task<IActionResult> ChangePaymentDown(string ApplicationCode,string Ref4)
         {
             var EMP_CODE = HttpContext.Session.GetString("EMP_CODE");
             if (EMP_CODE == null)
@@ -67,36 +69,32 @@ namespace App.Controllers
             ViewBag.EMP_CODE = HttpContext.Session.GetString("EMP_CODE");
             ViewBag.FullName = HttpContext.Session.GetString("FullName");
 
-            SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = strConnString;
+            GetApplication _GetApplication = new GetApplication();
+            _GetApplication.ApplicationCode = ApplicationCode;
+            GetApplicationRespone _GetApplicationRespone = await GetApplication(_GetApplication);
 
-
-            SqlCommand sqlCommand;
-            string strSQL = DATABASEK2 + ".[dbo].[GET_DATA_SGFINANCE_HP]";
-            sqlCommand = new SqlCommand(strSQL, connection);
-            sqlCommand.CommandType = CommandType.StoredProcedure;
-            sqlCommand.Parameters.AddWithValue("status", "CLOSING");
-            sqlCommand.Parameters.AddWithValue("ApplicationCodeNot", ApplicationCode);
-            SqlDataAdapter dtAdapter = new SqlDataAdapter();
-            dtAdapter.SelectCommand = sqlCommand;
-            DataTable dt = new DataTable();
-            dtAdapter.Fill(dt);
-            connection.Close();
-
-
-            List<ApplicationResponeModel> _ApplicationResponeModelMaster = new List<ApplicationResponeModel>();
-            if (dt.Rows.Count > 0)
+            using (var connection = new SqlConnection(strConnString))
             {
 
-                foreach (DataRow row in dt.Rows)
-                {
+                
+                string CustomerID = _GetApplicationRespone.CustomerID.Replace("A", "");
+                string sql = @$"
+                         SELECT	
+                             a.Ref4,
+                             a.ApplicationCode
+                         FROM {DATABASEK2}.[dbo].Application a WITH (NOLOCK)
+                         LEFT JOIN {DATABASEK2}.[dbo].Customer cus WITH (NOLOCK) ON cus.CustomerID = a.CustomerID  
+                         LEFT JOIN {DATABASESG}.[dbo].[SG_PAYMENT_REALTIME] p WITH (NOLOCK) ON a.Ref4 = p.ref1
+                         WHERE a.ApplicationStatusID = 'CLOSING'
+                         AND a.CustomerID = @CustomerID
+                         AND p.flag_status <> 'Y' 
+                         AND a.applicationCode <> @ApplicationCodeNot
+                         ORDER BY a.ApplicationDate DESC;";
 
-                    ApplicationResponeModel _ApplicationResponeModel = new ApplicationResponeModel();
-                    _ApplicationResponeModel.ApplicationCode = row["ApplicationCode"].ToString();
-                    _ApplicationResponeModel.Ref4 = row["Ref4"].ToString();
-                    
-                    _ApplicationResponeModelMaster.Add(_ApplicationResponeModel);
-                }
+                var ApplicationRespone = connection.Query<ApplicationResponeModel>(sql, new { CustomerID = CustomerID, ApplicationCodeNot = ApplicationCode });
+                ViewBag.Ref4 = Ref4;
+                ViewBag.ApplicationCode = ApplicationCode;
+                return View(ApplicationRespone);
             }
         }
 
@@ -559,14 +557,31 @@ namespace App.Controllers
             try
             {
                 Log.Debug(JsonConvert.SerializeObject(_GetApplication));
-
-                SqlConnection connection = new SqlConnection();
-                connection.ConnectionString = strConnString;
                 System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls11;
-                connection.Open();
-                SqlCommand sqlCommand;
 
-                string sql = "SELECT app.ApplicationID,app.AccountNo,app.ApplicationStatusID,app.CustomerID, app.ApplicationCode ,app.ProductID, cus.FirstName + ' ' + cus.LastName as Cusname ,cus.MobileNo1 as cusMobile ,app.SaleName ,app.SaleTelephoneNo,app.ProductModelName,app.ProductSerialNo,app.ProductBrandName ,app.SaleDepCode,app.SaleDepName FROM " + DATABASEK2 + ".[dbo].[Application] app left join " + DATABASEK2 + ".[dbo].Customer cus on cus.CustomerID = app.CustomerID  WHERE app.ApplicationCode = @ApplicationCode";
+                using (var connection = new SqlConnection(strConnString))
+                {
+                    string sql = @$"SELECT app.applicationid,
+                                       app.accountno,
+                                       app.applicationstatusid,
+                                       app.customerid,
+                                       app.applicationcode,
+                                       app.productid,
+                                       cus.firstname + ' ' + cus.lastname AS Cusname,
+                                       cus.mobileno1 AS cusMobile,
+                                       app.salename,
+                                       app.saletelephoneno,
+                                       app.productmodelname,
+                                       app.productserialno,
+                                       app.productbrandname,
+                                       app.saledepcode,
+                                       app.saledepname
+                                FROM {DATABASEK2}.[dbo].[application] app
+                                LEFT JOIN {DATABASEK2}.[dbo].customer cus ON cus.customerid = app.customerid
+                                WHERE app.applicationcode = @ApplicationCode ";
+                }
+
+                
                 sqlCommand = new SqlCommand(sql, connection);
                 sqlCommand.CommandType = CommandType.Text;
                 sqlCommand.Parameters.Add("@ApplicationCode", SqlDbType.NChar);
@@ -844,7 +859,7 @@ namespace App.Controllers
         }
 
         [HttpPost]
-        public async Task<string> ApiChangePayment([FromBody] ApiChangePayment _ApiChangePayment)
+        public async Task<string> ApiChangePayment(ApiChangePayment _ApiChangePayment)
         {
             string result = "";
             try
@@ -868,7 +883,7 @@ namespace App.Controllers
                     HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/c100/v2/SgFinance/PaymentAdjust", content);
                     int DeviceStatusCode = (int)responseDevice.StatusCode;
                     Log.Debug("API RETURN : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
-                    if (responseDevice.IsSuccessStatusCode)
+                    if (!responseDevice.IsSuccessStatusCode)
                     {
                         result = await responseDevice.Content.ReadAsStringAsync();
                     }
