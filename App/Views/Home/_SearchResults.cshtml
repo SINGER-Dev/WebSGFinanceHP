@@ -25,15 +25,17 @@
                 {
                     <tr>
                         <td>
-                            @if (result.ApplicationStatusID == "CANCELLED")
+                            @if (result.ApplicationStatusID == "CANCELLED" && result.flag_status == "Y")
                             {
-                                <svg style="cursor:pointer" data-bs-toggle="dropdown" aria-expanded="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
-                                    <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
-                                </svg>
+                                <div class="dropdown">
+                                    <svg style="cursor:pointer" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                                        <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+                                    </svg>
 
-                                <ul class="dropdown-menu dropdown-menu-dark bg-light">
-                                    <li><a class="dropdown-item text-black bg-warning" onclick="location.href = '@Url.Action("ChangePaymentDown", "Home", new { ApplicationCode = @result.ApplicationCode,Ref4 = @result.Ref4 })'">Change Payment</a></li>
-                                </ul>
+                                    <ul class="dropdown-menu dropdown-menu-dark bg-light" aria-labelledby="dropdownMenuButton1">
+                                        <li><a class="dropdown-item text-black bg-warning" onclick="location.href = '@Url.Action("ChangePaymentDown", "Home", new { ApplicationCode = @result.ApplicationCode,Ref4 = @result.Ref4 })'">Change Payment</a></li>
+                                    </ul>
+                                </div>
                             }
 
                         </td>
@@ -57,6 +59,7 @@
                         <td>
                             <span class="d-inline-block text-truncate" data-bs-toggle="tooltip" data-bs-placement="top" title="@result.ProductModelName">@result.ProductModelName  </span><br>
                             <B>Serial / IMEI : </B>@result.ProductSerialNo
+                            <B>InvoiceNo : </B>@result.InvoiceNo
                         </td>
 
                         <td>
@@ -112,10 +115,16 @@
                             {
                                 <span class="badge bg-warning" style="color:#000">@result.signedStatus</span>
                             }
-                            @if (result.ApplicationStatusID == "CLOSING" && result.statusReceived != "รับสินค้าแล้ว")
+
+
+                            @if ("HP" == result.loanTypeCate.ToString().Trim() && "STL" == result.OU_Code.ToString().Trim())
                             {
-                                <i class="GenEsignature fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
+                                @if (result.ApplicationStatusID == "CLOSING" && result.signedStatus == "รอลงนาม" && result.ProductSerialNo.Trim() != "" && result.Ref4.Trim() != "")
+                                {
+                                    <i class="GenEsignature fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
+                                }
                             }
+
                             <br>
 
 
@@ -127,6 +136,8 @@
                             {
                                 <B>สถานะรับสินค้า : </B><span class="badge bg-warning" style="color:#000">@result.statusReceived</span>
                             }
+
+
                         </td>
                         
 

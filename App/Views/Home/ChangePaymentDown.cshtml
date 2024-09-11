@@ -14,20 +14,30 @@
     <div class="card-body">
         <div class="row">
             <div class="col-4">
-                <select class="form-select select-field" id="ref1" name="ref1" required >
-                    <option value="@ViewBag.Ref4" selected>@ViewBag.ApplicationCode</option>
+                <select class="form-select select-field" id="ApplicationCode1" name="ApplicationCode1" required>
+                    <option value="@ViewBag.ApplicationCode" selected>@ViewBag.ApplicationCode</option>
                 </select>
-
+                    <div style="TEXT-ALIGN: left;">
+                        <span><B>เงินที่ชำระแล้วของใบคำขอเดิม</B></span> : <span id="TranferPay">@ViewBag.getPay</span><br>
+                        <span><B>รหัสบัตรประชาชน</B></span> : <span id="TranferCustomerID">@ViewBag.getCustomerID</span>
+                    </div>
             </div>
             <div class="col-4"><i class="fa-solid fa-circle-right fa-xl"></i></div>
             <div class="col-4">
-                    <select class="form-select select-field" id="ref2" name="ref2" required>
+                <select class="form-select select-field" id="ApplicationCode2" name="ApplicationCode2" required>
                     <option value="">กรุณาเลือกใบคำขอ</option>
                     @foreach (var result in Model)
                     {
-                        <option value="@result.Ref4">@result.ApplicationCode</option>
+                        <option value="@result.ApplicationCode">@result.ApplicationCode</option>
                     }
                 </select>
+                    <div style="TEXT-ALIGN: left;">
+                        <span><B>เงินที่ต้องชำระของใบคำขอใหม่</B></span> : <span id="paymentDue"></span><br>
+                        <span><B>เงินที่ชำระมาแล้ว</B></span> : <span id="alreadyPaid"></span><br>
+                        <span><B>เงินคงเหลือที่สามารถโยกได้</B></span> : <span id="AdditionalPay"></span><br>
+                        <span><B>รหัสบัตรประชาชน</B></span> : <span id="getCustomerID"></span>
+                    </div>
+
             </div>
         </div>
     </div>

@@ -20,6 +20,62 @@ $(document).ready(function () {
         }
     });
 
+    $('#ApplicationCode2').change(function (e) {
+        var formData = {
+            ApplicationCode: $(this).val()
+        };
+        $.ajax({
+            url: "/Home/getDataRef2", // Action URL
+            type: "POST", // Method (POST in this case)
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function (result) {
+                var paymentDue = parseFloat(result.firstPaymentAmount).toFixed(2) - parseFloat(result.getPaid).toFixed(2);
+                $('#paymentDue').text(parseFloat(result.firstPaymentAmount).toFixed(2));
+                $('#alreadyPaid').text(parseFloat(result.getPaid).toFixed(2));
+                $('#AdditionalPay').text(paymentDue.toFixed(2));
+                $('#getCustomerID').text(result.customerID);
+
+                
+                console.log(result);
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+
+    });
+    $('#area').change(function (e) {
+
+        $('#department').empty();
+        $('#department').append($('<option>', {
+            value: "",
+            text: "เลือกสาขาทั้งหมด"
+        }));
+
+        var formData = {
+            area: $('#area').val()
+        };
+
+        $.ajax({
+            url: "./Home/GetMsDepartment", // Action URL
+            type: "POST", // Method (POST in this case)
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function (result) {
+                $.each(result.msDepartment, function (index, MsDepartment) {
+                    $('#department').append($('<option>', {
+                        value: MsDepartment.deP_CODE,
+                        text: MsDepartment.deP_NAME_THA
+                    }));
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error(error);
+            }
+        });
+    });
+
     $('#BtnsearchResults').click(function () {
         searchForm();
     });
@@ -41,7 +97,14 @@ $(document).ready(function () {
                 $('#searchResults').html(result); // Update search results
                 const dt = $('#example').DataTable({
                     scrollX: true,
-                    "bSort": false
+                    pageLength: 5,
+                    lengthMenu: [[5, 10, 20, -1], [5, 10, 20, 'Todos']],
+                    buttons: ['excel'],
+                    layout: {
+                        topStart: 'pageLength',
+                        top: 'buttons',
+                        topEnd: 'search'
+                    }
                 });
 
             },
@@ -515,7 +578,13 @@ function searchForm() {
             const dt = $('#example').DataTable({
                 scrollX: true,
                 pageLength: 5,
-                lengthMenu: [[5, 10, 20, -1], [5, 10, 20, 'Todos']]
+                lengthMenu: [[5, 10, 20, -1], [5, 10, 20, 'Todos']],
+                buttons: ['excel'],
+                layout: {
+                    topStart: 'pageLength',
+                    top: 'buttons',
+                    topEnd: 'search'
+                }
             });
         },
         error: function (xhr, status, error) {

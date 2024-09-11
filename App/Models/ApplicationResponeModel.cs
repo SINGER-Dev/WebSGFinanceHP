@@ -37,7 +37,9 @@ namespace App.Models
         public string? DeliveryFlag { get; set; }
         public string? DeliveryDate { get; set; }
         public string? Ref4 { get; set; }
-        
+        public string? InvoiceNo { get; set; }
+        public string? flag_status { get; set; }
+
     }
 
 

@@ -48,6 +48,11 @@ namespace App.Models
     {
         public string ApplicationCode { get; set; }
     }
+    public class getDataRef2
+    {
+        public string ApplicationCode { get; set; }
+    }
+
     public class ApplicationRq
     {
         public string AccountNo { get; set; }
@@ -58,6 +63,8 @@ namespace App.Models
         public string startdate { get; set; }
         public string enddate { get; set; }
         public string CustomerName { get; set; }
+        public string area { get; set; }
+        public string department { get; set; }
     }
 
     public class SearchGetApplicationHistory
@@ -95,13 +102,38 @@ namespace App.Models
     {
         public string? ApplicationCode { get; set; }
     }
-
+    
+    public class GetMsDepartment
+    {
+        public string? area { get; set; }
+    }
     public class ApiChangePayment
     {
-        public string? ref1 { get; set; }
-        public string? ref2 { get; set; }
+        public string? ApplicationCode1 { get; set; }
+        public string? ApplicationCode2 { get; set; }
     }
-    
+
+    public class MsArea
+    {
+        public string? AREA_CODE { get; set; }
+        public string? AREA_NAME_THA { get; set; }
+        public string? AREA_NAME_ENG { get; set; }
+    }
+    public class MsAreaListViewModel
+    {
+        public List<MsArea> MsAreas { get; set; }
+    }
+
+    public class MsDepartment
+    {
+        public string? DEP_CODE { get; set; }
+        public string? DEP_NAME_THA { get; set; }
+    }
+    public class MsDepartmentViewModel
+    {
+        public List<MsDepartment> MsDepartment { get; set; }
+    }
+
     public class GetApplicationRespone
     {
         public string? statusCode { get; set; }
@@ -120,6 +152,10 @@ namespace App.Models
         public string? cusMobile { get; set; }
         public string? SaleName { get; set; }
         public string? SaleTelephoneNo { get; set; }
+        public string? ref4 { get; set; }
+        public string? getPay { get; set;}
+        public string? getPaid { get; set; }
+        public string? FirstPaymentAmount { get; set; }
 
     }
 }
