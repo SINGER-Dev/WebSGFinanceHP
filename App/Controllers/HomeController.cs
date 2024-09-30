@@ -342,7 +342,7 @@ namespace App.Controllers
                         cus.mobileno1 AS cusMobile,
                         a.salename,
                         a.saletelephoneno,
-                        CASE
+                        ISNULL(CASE
                           WHEN (STUFF((SELECT ', ' + s.itemserial
                                        FROM {SGDIRECT}.[auto_sale_pos_serial] s WITH (NOLOCK)
                                        WHERE s.apporderno = a.applicationcode
@@ -352,11 +352,7 @@ namespace App.Controllers
                                   WHERE s.apporderno = a.applicationcode
                                   FOR XML PATH('')), 1, 1, '')
                           ELSE a.productserialno
-                        END AS ProductSerialNo,
-                        a.saledepcode,
-                        a.saledepname,
-                        a.productmodelname,
-                        a.productserialno,
+                        END,'') AS ProductSerialNo,
                         a.applicationstatusid,
                         CASE
                           WHEN con.signedstatus = 'COMP-Done' THEN 'เรียบร้อย'
