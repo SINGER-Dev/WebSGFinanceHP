@@ -120,8 +120,8 @@ $(document).ready(function () {
         checkSession();
 
         e.preventDefault();
-
-        if ($.trim($('#ref1').val()) == "" || $.trim($('#ref2').val()) == "") {
+        console.log($.trim($('#ApplicationCode1').val()) + " " + $.trim($('#ApplicationCode2').val()));
+        if ($.trim($('#ApplicationCode1').val()) == "" || $.trim($('#ApplicationCode2').val()) == "") {
             Swal.fire({
                 icon: "error",
                 title: "Oops...",

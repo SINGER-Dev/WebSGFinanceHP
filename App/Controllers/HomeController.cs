@@ -141,7 +141,6 @@ namespace App.Controllers
  	                        LEFT JOIN {DATABASEK2}.[Customer] trafCUS WITH (NOLOCK) ON trafCUS.CustomerID = trafA.CustomerID  
  	                        group by trafA.Ref4,trafA.ApplicationCode,trafP.AMT_SHP_PAY, trafA.CustomerID
                          )tranf ON a.Ref4 = tranf.Ref4
-                         INNER JOIN {SGDIRECT}.[auto_sale_pos_header] h WITH (NOLOCK) ON h.apporderno = a.applicationcode
                          LEFT JOIN {DATABASEK2}.[Customer] cus WITH (NOLOCK) ON cus.CustomerID = a.CustomerID  
                          LEFT JOIN {SGCROSSBANK}.[SG_PAYMENT_REALTIME] p WITH (NOLOCK) ON a.Ref4 = p.ref1
                          WHERE a.ApplicationStatusID = 'CLOSING'
