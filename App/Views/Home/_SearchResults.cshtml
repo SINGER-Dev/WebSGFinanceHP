@@ -27,7 +27,7 @@
                         <td>
                             @if (result.ApplicationStatusID == "CANCELLED" && result.flag_status == "Y")
                             {
-                                <div class="dropdown">
+                                @* <div class="dropdown">
                                     <svg style="cursor:pointer" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
                                         <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
                                     </svg>
@@ -35,7 +35,7 @@
                                     <ul class="dropdown-menu dropdown-menu-dark bg-light" aria-labelledby="dropdownMenuButton1">
                                         <li><a class="dropdown-item text-black bg-warning" onclick="location.href = '@Url.Action("ChangePaymentDown", "Home", new { ApplicationCode = @result.ApplicationCode,Ref4 = @result.Ref4 })'">Change Payment</a></li>
                                     </ul>
-                                </div>
+                                </div> *@
                             }
 
                         </td>
@@ -145,18 +145,18 @@
 
                             @if (result.DeliveryFlag == "จัดส่งสินค้าเรียบร้อย")
                             {
-                                <B>DeliveryFlag : </B>
+                                <B>ShipmentFlag : </B>
                                 <span class="badge bg-success">@result.DeliveryFlag</span>
                                 <br>
                             }
                             else
                             {
-                                <B>DeliveryFlag : </B>
+                                <B>ShipmentFlag : </B>
                                 <span class="badge bg-warning" style="color:#000">@result.DeliveryFlag</span>
                                 <br>
                             }
 
-                            <B>DeliveryDate : @result.DeliveryDate</B>
+                            <B>ShipmentDate : @result.DeliveryDate</B>
 
                         </td>
 
