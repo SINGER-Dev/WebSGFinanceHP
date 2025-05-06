@@ -1,6 +1,4 @@
-﻿using System.Reflection.Emit;
-
-namespace App.Models
+﻿namespace App.Model
 {
     public class ApplicationResponeModel
     {
@@ -39,6 +37,8 @@ namespace App.Models
         public string? Ref4 { get; set; }
         public string? InvoiceNo { get; set; }
         public string? flag_status { get; set; }
+        public string? AMT_SHP_PAY { get; set; }
+        public string? SumAmount { get; set; }
 
     }
 

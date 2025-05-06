@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ApplicationModels;
-
-namespace App.Models
+﻿namespace App.Model
 {
     public class requestBodyValue
     {

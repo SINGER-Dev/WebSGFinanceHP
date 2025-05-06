@@ -14,25 +14,14 @@ namespace App.Controllers
     public class LoginController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        string strConnString, DATABASEK2, strConnString3, ApplicationID;
+        private readonly AppSettings _appSettings;
 
         private const string FullName = "";
         private const string EMP_CODE = "";
         private const string RoleDescription = "";
-        public LoginController(ILogger<HomeController> logger)
+        public LoginController(ILogger<HomeController> logger, AppSettings appSettings)
         {
-            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var builder = new ConfigurationBuilder()
-                        .SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile($"appsettings.{env}.json", true, false)
-                        .AddJsonFile($"appsettings.json", true, false)
-                        .AddEnvironmentVariables()
-                        .Build();
-            _logger = logger;
-            strConnString = builder.GetConnectionString("strConnString");
-            DATABASEK2 = builder.GetConnectionString("DATABASEK2");
-            strConnString3 = builder.GetConnectionString("strConnString3");
-            ApplicationID = builder.GetConnectionString("ApplicationID"); 
+            _appSettings = appSettings;
         }
 
         public IActionResult Index()
@@ -46,7 +35,7 @@ namespace App.Controllers
             User _User = new User();
 
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = strConnString3;
+            connection.ConnectionString = _appSettings.strConnString3;
             connection.Open();
             SqlDataAdapter dtAdapter = new SqlDataAdapter();
 
@@ -59,7 +48,7 @@ namespace App.Controllers
             //ชื่อตัวแปรในสโตร , ค่าที่เก็บสโตร
             sqlCommand.Parameters.AddWithValue("EMP_CODE", _Login.user_id);
             sqlCommand.Parameters.AddWithValue("Password", _Login.password);
-            sqlCommand.Parameters.AddWithValue("ApplicationID", ApplicationID);
+            sqlCommand.Parameters.AddWithValue("ApplicationID", _appSettings.ApplicationID);
             dtAdapter.SelectCommand = sqlCommand;
 
             DataTable dt = new DataTable();

@@ -1,4 +1,5 @@
-﻿@model List<ApplicationResponeModel>
+﻿@using App.Model
+@model List<ApplicationResponeModel>
 
 @if (Model != null && Model.Count > 0)
 {
@@ -58,19 +59,19 @@
                         </td>
                         <td>
                             <span class="d-inline-block text-truncate" data-bs-toggle="tooltip" data-bs-placement="top" title="@result.ProductModelName">@result.ProductModelName  </span><br>
-                            <B>Serial / IMEI : </B>@result.ProductSerialNo
+                            <B>Serial / IMEI : </B>@result.ProductSerialNo<br>
                             <B>InvoiceNo : </B>@result.InvoiceNo
                         </td>
 
                         <td>
+                            <B>สถานะใบคำขอ : </B>
                             @if (result.signedStatus == "เรียบร้อย" && result.statusReceived == "รับสินค้าแล้ว" && result.ApplicationStatusID == "CLOSED" )
                             {
                                 <span class="badge bg-success">@result.ApplicationStatusID</span> <i class="C100StatusClosed fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
-                                <br>
                             }
                             else
                             {
-                                <span class="badge bg-warning" style="color:#000">@result.ApplicationStatusID</span> <br>
+                                <span class="badge bg-warning" style="color:#000">@result.ApplicationStatusID</span>
                             }
                             @if (@result.datenowcheck != "1")
                             {
@@ -91,14 +92,33 @@
 
                                 }
                             }
+                            <br />
+
+                            <B>สถานะชำระเงิน : </B>
+                            @if (@result.flag_status == "Y")
+                            {
+                                if (Convert.ToDecimal(@result.SumAmount) < Convert.ToDecimal(@result.AMT_SHP_PAY))
+                                {
+                                    <span class="badge bg-danger">ชำระเงินไม่ครบ</span>
+                                }
+                                else if (Convert.ToDecimal(@result.SumAmount) == Convert.ToDecimal(@result.AMT_SHP_PAY))
+                                {
+                                    <span class="badge bg-success">ชำระเงินแล้ว</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">ยังไม่ชำระเงิน</span>
+                                <i class="LinkPayment fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
+                            }
                         </td>
 
-                        
+
                         <td>
                             <B>จำนวนสัญญา :</B>
                             @if (result.numdoc == "ปกติ")
                             {
-                                 <span class="badge bg-success">@result.numdoc</span> <br>
+                                <span class="badge bg-success">@result.numdoc</span> <br>
                             }
                             else
                             {
@@ -117,13 +137,19 @@
                             }
 
 
-                            @if ("HP" == result.loanTypeCate.ToString().Trim() && "STL" == result.OU_Code.ToString().Trim())
+
+                            @if (result.ApplicationStatusID == "CLOSING" && (result.signedStatus == "รอลงนาม" || result.signedStatus == "-"))
                             {
-                                @if (result.ApplicationStatusID == "CLOSING" && result.signedStatus == "รอลงนาม" && result.ProductSerialNo.Trim() != "" && result.Ref4.Trim() != "")
+                                @if (result.ProductSerialNo.Trim() != "")
                                 {
                                     <i class="GenEsignature fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
                                 }
+                                else
+                                {
+                                    <span class="badge bg-warning" style="color:#000">Serial Not Found.</span>
+                                }
                             }
+                            
 
                             <br>
 
@@ -139,24 +165,29 @@
 
 
                         </td>
-                        
 
-                         <td>
 
-                            @if (result.DeliveryFlag == "จัดส่งสินค้าเรียบร้อย")
+                        <td>
+                            @if (result.loanTypeCate == "HP")
                             {
-                                <B>ShipmentFlag : </B>
-                                <span class="badge bg-success">@result.DeliveryFlag</span>
-                                <br>
-                            }
-                            else
-                            {
-                                <B>ShipmentFlag : </B>
-                                <span class="badge bg-warning" style="color:#000">@result.DeliveryFlag</span>
-                                <br>
+
+                                @if (result.DeliveryFlag == "จัดส่งสินค้าเรียบร้อย")
+                                {
+                                    <B>ShipmentFlag : </B>
+                                    <span class="badge bg-success">@result.DeliveryFlag</span>
+                                    <br>
+                                }
+                                else
+                                {
+                                    <B>ShipmentFlag : </B>
+                                    <span class="badge bg-warning" style="color:#000">@result.DeliveryFlag</span>
+                                    <br>
+                                }
+
+                                <B>ShipmentDate : @result.DeliveryDate</B>
+                            
                             }
 
-                            <B>ShipmentDate : @result.DeliveryDate</B>
 
                         </td>
 

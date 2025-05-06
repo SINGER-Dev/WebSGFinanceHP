@@ -1,4 +1,4 @@
-using App.Models;
+using App.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -15,39 +15,21 @@ using System.Transactions;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using static System.Net.Mime.MediaTypeNames;
+using System.Net.Http.Headers;
+using System.Net.Http;
 
 namespace App.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        string strConnString, DATABASEK2, WSCANCEL, UrlEztax, UsernameEztax, PasswordEztax, ClientIdEztax, ApiKey, SGAPIESIG, SGCROSSBANK, SGCESIGNATURE, CORELOAN, SGDIRECT, strConnString3;
-
-        public HomeController(ILogger<HomeController> logger)
+        private readonly AppSettings _appSettings;
+        private readonly IPaymentService _iPaymentService;
+        public HomeController(ILogger<HomeController> logger, AppSettings appSettings, IPaymentService iPaymentService)
         {
 
-            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var builder = new ConfigurationBuilder()
-                        .SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile($"appsettings.{env}.json", true, false)
-                        .AddJsonFile($"appsettings.json", true, false)
-                        .AddEnvironmentVariables()
-                        .Build();
-            _logger = logger;
-            strConnString = builder.GetConnectionString("strConnString");
-            DATABASEK2 = builder.GetConnectionString("DATABASEK2");
-            WSCANCEL = builder.GetConnectionString("WSCANCEL");
-            UrlEztax = builder.GetConnectionString("UrlEztax");
-            UsernameEztax = builder.GetConnectionString("UsernameEztax");
-            PasswordEztax = builder.GetConnectionString("PasswordEztax");
-            ClientIdEztax = builder.GetConnectionString("ClientIdEztax");
-            ApiKey = builder.GetConnectionString("ApiKey");
-            SGAPIESIG = builder.GetConnectionString("SGAPIESIG");
-            SGCROSSBANK = builder.GetConnectionString("SGCROSSBANK");
-            SGCESIGNATURE = builder.GetConnectionString("SGCESIGNATURE");
-            CORELOAN = builder.GetConnectionString("CORELOAN");
-            SGDIRECT = builder.GetConnectionString("SGDIRECT");
-            strConnString3 = builder.GetConnectionString("strConnString3");
+            _appSettings = appSettings;
+            _iPaymentService = iPaymentService;
         }
 
         public IActionResult Index()
@@ -61,7 +43,7 @@ namespace App.Controllers
             ViewBag.FullName = HttpContext.Session.GetString("FullName");
 
 
-            using (var connection = new SqlConnection(strConnString3))
+            using (var connection = new SqlConnection(_appSettings.strConnString3))
             {
 
                 string sql = @"
@@ -81,7 +63,7 @@ namespace App.Controllers
         [HttpPost]
         public async Task<MsDepartmentViewModel> GetMsDepartment([FromBody] GetMsDepartment _GetMsDepartment)
         {
-            using (var connection = new SqlConnection(strConnString3))
+            using (var connection = new SqlConnection(_appSettings.strConnString3))
             {
                 string sql = @" 
                 SELECT [DEP_CODE]
@@ -122,7 +104,7 @@ namespace App.Controllers
             _GetApplication.ApplicationCode = ApplicationCode;
             GetApplicationRespone _GetApplicationRespone = await GetApplication(_GetApplication);
 
-            using (var connection = new SqlConnection(strConnString))
+            using (var connection = new SqlConnection(_appSettings.strConnString))
             {
                 string CustomerID = _GetApplicationRespone.CustomerID.Replace("A", "");
                 string sql = @$"
@@ -133,16 +115,16 @@ namespace App.Controllers
                              a.CustomerID AS getCustomerID,
                              tranf.TranferPay,
                              tranf.TranferCustomerID
-                         FROM {DATABASEK2}.[Application] a WITH (NOLOCK)
+                         FROM {_appSettings.DATABASEK2}.[Application] a WITH (NOLOCK)
                          INNER JOIN  (
  	                        SELECT trafA.Ref4,trafA.ApplicationCode,trafP.AMT_SHP_PAY as TranferPay, trafA.CustomerID AS TranferCustomerID
- 	                        FROM {DATABASEK2}.[Application] trafA
- 	                        LEFT JOIN {SGCROSSBANK}.[SG_PAYMENT_REALTIME] trafP WITH (NOLOCK) ON trafA.Ref4 = trafP.ref1
- 	                        LEFT JOIN {DATABASEK2}.[Customer] trafCUS WITH (NOLOCK) ON trafCUS.CustomerID = trafA.CustomerID  
+ 	                        FROM {_appSettings.DATABASEK2}.[Application] trafA
+ 	                        LEFT JOIN {_appSettings.SGCROSSBANK}.[SG_PAYMENT_REALTIME] trafP WITH (NOLOCK) ON trafA.Ref4 = trafP.ref1
+ 	                        LEFT JOIN {_appSettings.DATABASEK2}.[Customer] trafCUS WITH (NOLOCK) ON trafCUS.CustomerID = trafA.CustomerID  
  	                        group by trafA.Ref4,trafA.ApplicationCode,trafP.AMT_SHP_PAY, trafA.CustomerID
                          )tranf ON a.Ref4 = tranf.Ref4
-                         LEFT JOIN {DATABASEK2}.[Customer] cus WITH (NOLOCK) ON cus.CustomerID = a.CustomerID  
-                         LEFT JOIN {SGCROSSBANK}.[SG_PAYMENT_REALTIME] p WITH (NOLOCK) ON a.Ref4 = p.ref1
+                         LEFT JOIN {_appSettings.DATABASEK2}.[Customer] cus WITH (NOLOCK) ON cus.CustomerID = a.CustomerID  
+                         LEFT JOIN {_appSettings.SGCROSSBANK}.[SG_PAYMENT_REALTIME] p WITH (NOLOCK) ON a.Ref4 = p.ref1
                          WHERE a.ApplicationStatusID = 'CLOSING'
                          AND a.CustomerID = @CustomerID
                          AND p.flag_status <> 'Y' 
@@ -217,11 +199,11 @@ namespace App.Controllers
 
             List<SearchGetApplicationHistoryRespone> _SearchGetApplicationHistoryResponeMaster = new List<SearchGetApplicationHistoryRespone>();
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = strConnString;
+            connection.ConnectionString = _appSettings.strConnString;
             try
             {
                 SqlCommand sqlCommand;
-                string strSQL = DATABASEK2 + ".[GetApplicationHistory]";
+                string strSQL = _appSettings.DATABASEK2 + ".[GetApplicationHistory]";
                 sqlCommand = new SqlCommand(strSQL, connection);
                 sqlCommand.CommandType = CommandType.StoredProcedure;
                 sqlCommand.Parameters.AddWithValue("AccountNo", _SearchGetApplicationHistory.AccountNo);
@@ -279,197 +261,147 @@ namespace App.Controllers
             try
             {
 
-                using (var connection = new SqlConnection(strConnString))
+                using (var connection = new SqlConnection(_appSettings.strConnString))
                 {
                     connection.Open();
 
                     var sql = @$"
-                -- Step 1: Insert into temporary tables
-                SELECT c.signedstatus,
-                       c.statusreceived,
-                       c.documentno
-                INTO #contracts_temp
-                FROM {SGCESIGNATURE}.[contracts] c WITH (NOLOCK)
-                INNER JOIN {DATABASEK2}.[application] a WITH (NOLOCK)
-                    ON a.applicationcode = c.documentno
-                INNER JOIN {DATABASEK2}.[applicationextend] e WITH (NOLOCK)
-                    ON e.applicationid = a.applicationid
-                WHERE (CONVERT(NVARCHAR, createdat, 23) >= CONVERT(DATE, @startDate, 23) OR ISNULL(@startDate, '') = '')
-                  AND (CONVERT(NVARCHAR, createdat, 23) <= CONVERT(DATE, @endDate, 23) OR ISNULL(@endDate, '') = '')
-                  AND e.loantypecate = 'HP';
+DECLARE 
+    @TodayStart DATETIME = CAST(@startDate AS DATE),
+    @TomorrowStart DATETIME = DATEADD(DAY, 1, CAST(@endDate AS DATE));
 
-                SELECT COUNT(n.arm_acc_no) AS newnum,
-                       n.arm_acc_no,
-                       n.arm_loaded_flag
-                INTO #arm_t_newsales_temp
-                FROM {CORELOAN}.[arm_t_newsales] n WITH (NOLOCK)
-                INNER JOIN {DATABASEK2}.[application] a WITH (NOLOCK)
-                    ON a.accountno = n.arm_acc_no
-                INNER JOIN {DATABASEK2}.[applicationextend] e WITH (NOLOCK)
-                    ON e.applicationid = a.applicationid
-                WHERE e.loantypecate = 'HP'
-                  AND (CONVERT(DATE, n.created_date, 23) >= CONVERT(DATE, @startDate, 23) OR ISNULL(@startDate, '') = '')
-                  AND (CONVERT(DATE, n.created_date, 23) <= CONVERT(DATE, @endDate, 23) OR ISNULL(@endDate, '') = '')
-                GROUP BY n.arm_acc_no, n.arm_loaded_flag;
+-- STEP 0: ดึง application เฉพาะของ STL ที่อยู่ในช่วงวันนี้
+SELECT a.applicationid, a.applicationcode, a.applicationdate
+INTO #base_app
+FROM {_appSettings.DATABASEK2}.[application] a WITH (NOLOCK)
+JOIN {_appSettings.DATABASEK2}.[applicationextend] ae WITH (NOLOCK) ON ae.applicationid = a.applicationid
+WHERE a.applicationdate >= @TodayStart AND a.applicationdate < @TomorrowStart
+AND ae.ou_code LIKE 'STL%';
 
-                SELECT COUNT(p.arm_acc_no) AS paynum,
-                       p.arm_acc_no,
-                       p.arm_receipt_stat
-                INTO #arm_t_payment_temp
-                FROM {CORELOAN}.[arm_t_payment] p WITH (NOLOCK)
-                INNER JOIN {DATABASEK2}.[application] a WITH (NOLOCK)
-                    ON a.accountno = p.arm_acc_no
-                INNER JOIN {DATABASEK2}.[applicationextend] e WITH (NOLOCK)
-                    ON e.applicationid = a.applicationid
-                WHERE e.loantypecate = 'HP'
-                  AND (CONVERT(DATE, p.created_date, 23) >= CONVERT(DATE, @startDate, 23) OR ISNULL(@startDate, '') = '')
-                  AND (CONVERT(DATE, p.created_date, 23) <= CONVERT(DATE, @endDate, 23) OR ISNULL(@endDate, '') = '')
-                GROUP BY p.arm_acc_no, p.arm_receipt_stat;
+-- STEP 1: สร้าง Temp Contract
+SELECT c.documentno, c.signedstatus, c.statusreceived
+INTO #contracts_temp
+FROM {_appSettings.SGCESIGNATURE}.contracts c WITH (NOLOCK)
+JOIN #base_app b ON c.documentno = b.applicationcode
+WHERE c.createdat >= @TodayStart AND c.createdat < @TomorrowStart;
 
-                -- Step 2: Main query
-                SELECT  a.applicationid,
-                        a.applicationcode,
-                        a.accountno,
-                        a.saledepcode,
-                        a.saledepname,
-                        CONVERT(NVARCHAR, a.applicationdate, 23) AS ApplicationDate,
-                        CONVERT(NVARCHAR, a.applicationdate, 20) AS ApplicationDate2,
-                        a.productid,
-                        a.productmodelname,
-                        a.customerid,
-                        cus.firstname + ' ' + cus.lastname AS Cusname,
-                        cus.mobileno1 AS cusMobile,
-                        a.salename,
-                        a.saletelephoneno,
-                        ISNULL(CASE
-                          WHEN (STUFF((SELECT ', ' + s.itemserial
-                                       FROM {SGDIRECT}.[auto_sale_pos_serial] s WITH (NOLOCK)
-                                       WHERE s.apporderno = a.applicationcode
-                                       FOR XML PATH('')), 1, 1, '')) <> '' THEN
-                           STUFF((SELECT ', ' + s.itemserial
-                                  FROM {SGDIRECT}.[auto_sale_pos_serial] s WITH (NOLOCK)
-                                  WHERE s.apporderno = a.applicationcode
-                                  FOR XML PATH('')), 1, 1, '')
-                          ELSE a.productserialno
-                        END,'') AS ProductSerialNo,
-                        a.applicationstatusid,
-                        CASE
-                          WHEN con.signedstatus = 'COMP-Done' THEN 'เรียบร้อย'
-                          WHEN con.signedstatus = 'Initial' THEN 'รอลงนาม'
-                          WHEN ISNULL(con.signedstatus, 'NULL') = 'NULL' THEN '-'
-                          ELSE con.signedstatus
-                        END AS signedStatus,
-                        CASE
-                          WHEN ISNULL(con.statusreceived, '0') = '1' THEN 'รับสินค้าแล้ว'
-                          ELSE 'ยังไม่รับสินค้า'
-                        END AS statusReceived,
-                        CASE
-                          WHEN ISNULL(c.esig_confirm_status, '0') = '1' THEN 'เรียบร้อย'
-                          ELSE 'รอลงนาม'
-                        END AS ESIG_CONFIRM_STATUS,
-                        CASE
-                          WHEN ISNULL(c.receive_flag, '0') = '1' THEN 'รับสินค้าแล้ว'
-                          ELSE 'ยังไม่รับสินค้า'
-                        END AS RECEIVE_FLAG,
-                        a.approveddate,
-                        '-' AS numregis,
-                        CASE
-                          WHEN c.esig_confirm_status = '1' AND con.signedstatus = 'COMP-Done' THEN 'เรียบร้อย'
-                          WHEN c.esig_confirm_status = '0' OR con.signedstatus = 'Initial' THEN 'รอลงนาม'
-                          ELSE 'ลงนามไม่สำเร็จ'
-                        END AS signedText,
-                        CASE
-                          WHEN checkcon.numdoc > 1 THEN 'พบรายการซ้ำ'
-                          ELSE 'ปกติ'
-                        END AS numdoc,
-                        CASE
-                          WHEN new.newnum = 1 AND new.arm_loaded_flag IN (0, 1) THEN 'เรียบร้อย'
-                          WHEN new.newnum = 1 AND new.arm_loaded_flag = 2 THEN 'CANCELLED'
-                          WHEN new.newnum > 1 THEN 'รายการซ้ำ'
-                          ELSE 'ไม่พบรายการ'
-                        END AS newnum,
-                        CASE
-                          WHEN pay.paynum = 1 AND pay.arm_receipt_stat = 'APPROVED' THEN 'เรียบร้อย'
-                          WHEN pay.paynum = 1 AND pay.arm_receipt_stat = 'CANCELLED' THEN 'CANCELLED'
-                          WHEN pay.paynum > 1 THEN 'รายการซ้ำ'
-                          ELSE 'ไม่พบรายการ'
-                        END AS paynum,
-                        '' AS LINE_STATUS,
-                        '' AS TRANSFER_DATE,
-                        appex.refcode,
-                        LEFT(appex.ou_code, 3) AS OU_Code,
-                        appex.loantypecate,
-                        [deliveryflag],
-                        CASE
-                          WHEN [deliveryflag] = 1 THEN 'จัดส่งสินค้าเรียบร้อย'
-                          ELSE 'อยู่ระหว่างการจัดส่งสินค้า'
-                        END AS DeliveryFlag,
-                        CONVERT(NVARCHAR, [deliverydate], 20) AS [DeliveryDate],
-                        ISNULL(bank.ref4,'') AS Ref4,
-                        a.applicationcode,
-                        ISNULL(h.InvoiceNo,'') AS InvoiceNo,
-                        ISNULL(bank.flag_status,'') as flag_status
-                FROM {DATABASEK2}.[application] a WITH (NOLOCK)
-                INNER JOIN {SGDIRECT}.[auto_sale_pos_header] h WITH (NOLOCK)
-                    ON h.apporderno = a.applicationcode
-                INNER JOIN {DATABASEK2}.[applicationextend] appex WITH (NOLOCK)
-                    ON appex.applicationid = a.applicationid
-                LEFT JOIN {DATABASEK2}.[customer] cus WITH (NOLOCK)
-                    ON cus.customerid = a.customerid
-                LEFT JOIN {DATABASEK2}.[application_esig_status] c WITH (NOLOCK)
-                    ON a.applicationcode = c.application_code
-                LEFT JOIN #contracts_temp con WITH (NOLOCK)
-                    ON a.applicationcode = con.documentno
-                LEFT JOIN (SELECT COUNT(documentno) AS numdoc,
-                                  documentno
-                           FROM #contracts_temp WITH (NOLOCK)
-                           GROUP BY documentno) checkcon
-                    ON checkcon.documentno = a.applicationcode
-                LEFT JOIN (SELECT COUNT(arm_acc_no) AS newnum,
-                                  arm_acc_no,
-                                  arm_loaded_flag
-                           FROM #arm_t_newsales_temp WITH (NOLOCK)
-                           GROUP BY arm_acc_no, arm_loaded_flag) new
-                    ON new.arm_acc_no = a.accountno
-                LEFT JOIN (SELECT COUNT(arm_acc_no) AS paynum,
-                                  arm_acc_no,
-                                  arm_receipt_stat
-                           FROM #arm_t_payment_temp WITH (NOLOCK)
-                           GROUP BY arm_acc_no, arm_receipt_stat) pay
-                    ON pay.arm_acc_no = a.accountno
-                LEFT JOIN (SELECT a.applicationid,
-                                  a.applicationcode,
-                                  a.ref4,
-                                  p.amt_shp_pay,
-                                  p.amt_paid,
-                                    p.flag_status
-                           FROM {DATABASEK2}.[application] a WITH (NOLOCK)
-                           INNER JOIN {DATABASEK2}.[applicationextend] e WITH (NOLOCK)
-                               ON a.applicationid = e.applicationid
-                           INNER JOIN {SGCROSSBANK}.[sg_payment_realtime] p WITH (NOLOCK)
-                               ON a.ref4 = p.ref1
-                           WHERE p.flag_status = 'Y' AND ISNULL(a.ref4, '') <> '') bank
-                    ON bank.applicationcode = a.applicationcode
-                WHERE a.applicationstatusid NOT IN ('REVISING')
-                AND (ISNULL(@status, '') = '' OR a.applicationstatusid = @status)
-                AND CONVERT(DATE, a.applicationdate, 23) >= '2024-05-01'
-                AND (ISNULL(@AccountNo, '') = '' OR a.accountno = @AccountNo)
-                AND (ISNULL(@ApplicationCode, '') = '' OR a.applicationcode = @ApplicationCode)
-                AND appex.loantypecate = 'HP'
-                AND (ISNULL(@ProductSerialNo, '') = '' OR a.productserialno = @ProductSerialNo)
-                AND (ISNULL(@area, '') = '' OR a.AreaID = @area)
-                AND (ISNULL(@department, '') = '' OR a.DepartmentID = @department)
-                AND (ISNULL(@CustomerID, '') = '' OR a.customerid = @CustomerID)
-                AND (CONVERT(DATE, a.applicationdate, 23) >= CONVERT(DATE, @startDate, 23) OR ISNULL(@startDate, '') = '')
-                AND (CONVERT(DATE, a.applicationdate, 23) <= CONVERT(DATE, @endDate, 23) OR ISNULL(@endDate, '') = '')
-                AND (ISNULL(@CustomerName, '') = '' OR cus.firstname + ' ' + cus.lastname LIKE '%' + @CustomerName + '%')
-                AND LEFT(appex.ou_code, 3) = 'STL'
-                ORDER BY a.applicationdate DESC;
+-- STEP 2: Serial แบบรวม
+SELECT s.apporderno,
+       serials = STRING_AGG(s.itemserial, ', ') WITHIN GROUP (ORDER BY s.itemserial)
+INTO #serials
+FROM {_appSettings.SGDIRECT}.[auto_sale_pos_serial] s WITH (NOLOCK)
+JOIN #base_app b ON s.apporderno = b.applicationcode
+GROUP BY s.apporderno;
 
-                -- Drop temporary tables
-                DROP TABLE #contracts_temp;
-                DROP TABLE #arm_t_newsales_temp;
-                DROP TABLE #arm_t_payment_temp;";
+-- STEP 3: Payment แบบมี ref1
+SELECT a.applicationcode,
+       p.ref1,
+       p.flag_status,
+       p.amt_shp_pay,
+	   bank.SumAmount
+INTO #payment
+FROM {_appSettings.DATABASEK2}.[application] a WITH (NOLOCK)
+JOIN #base_app b ON a.applicationcode = b.applicationcode
+JOIN {_appSettings.SGCROSSBANK}.[sg_payment_realtime] p WITH (NOLOCK) ON a.ref4 = p.ref1
+LEFT JOIN (
+    SELECT Ref1, SUM(TRY_CAST(Amount AS DECIMAL(18, 2))) AS SumAmount
+    FROM {_appSettings.SGCROSSBANK}.[BANK_TRANSACTION] WITH (NOLOCK)
+    GROUP BY Ref1
+) bank ON bank.Ref1 = p.ref1
+WHERE p.flag_status = 'Y' AND ISNULL(a.ref4, '') <> '';
+
+-- STEP 4: MAIN QUERY
+SELECT
+    a.applicationid,
+    a.applicationcode,
+    a.accountno,
+    a.saledepcode,
+    a.saledepname,
+    CONVERT(NVARCHAR, a.applicationdate, 23) AS ApplicationDate,
+    CONVERT(NVARCHAR, a.applicationdate, 20) AS ApplicationDate2,
+    a.productid,
+    a.productmodelname,
+    a.customerid,
+    cus.firstname + ' ' + cus.lastname AS Cusname,
+    cus.mobileno1 AS cusMobile,
+    a.salename,
+    a.saletelephoneno,
+    ISNULL(serials.serials, '') AS ProductSerialNo,
+    a.applicationstatusid,
+    CASE
+        WHEN con.signedstatus = 'COMP-Done' THEN 'เรียบร้อย'
+        WHEN con.signedstatus = 'Initial' THEN 'รอลงนาม'
+        WHEN ISNULL(con.signedstatus, 'NULL') = 'NULL' THEN '-'
+        ELSE con.signedstatus
+    END AS signedStatus,
+    CASE
+        WHEN ISNULL(con.statusreceived, '0') = '1' THEN 'รับสินค้าแล้ว'
+        ELSE 'ยังไม่รับสินค้า'
+    END AS statusReceived,
+    CASE
+        WHEN ISNULL(c.esig_confirm_status, '0') = '1' THEN 'เรียบร้อย'
+        ELSE 'รอลงนาม'
+    END AS ESIG_CONFIRM_STATUS,
+    CASE
+        WHEN ISNULL(c.receive_flag, '0') = '1' THEN 'รับสินค้าแล้ว'
+        ELSE 'ยังไม่รับสินค้า'
+    END AS RECEIVE_FLAG,
+    a.approveddate,
+    '-' AS numregis,
+    CASE
+        WHEN (ISNULL(c.esig_confirm_status, '0') = '1' AND con.signedstatus = 'COMP-Done') THEN 'เรียบร้อย'
+        WHEN (c.esig_confirm_status = '0' OR con.signedstatus = 'Initial') THEN 'รอลงนาม'
+        ELSE 'ลงนามไม่สำเร็จ'
+    END AS signedText,
+    CASE
+        WHEN checkcon.numdoc > 1 THEN 'พบรายการซ้ำ'
+        ELSE 'ปกติ'
+    END AS numdoc,
+    appex.refcode,
+    LEFT(appex.ou_code, 3) AS OU_Code,
+    appex.loantypecate,
+    h.deliveryflag,
+    CASE
+        WHEN h.deliveryflag = 1 THEN 'จัดส่งสินค้าเรียบร้อย'
+        ELSE 'อยู่ระหว่างการจัดส่งสินค้า'
+    END AS DeliveryFlag,
+    CONVERT(NVARCHAR, h.deliverydate, 20) AS DeliveryDate,
+    ISNULL(p.ref1,'') AS Ref4,
+    ISNULL(h.InvoiceNo,'') AS InvoiceNo,
+    ISNULL(p.flag_status,'') as flag_status,
+    ISNULL(p.AMT_SHP_PAY,'') as AMT_SHP_PAY,
+	ISNULL(p.SumAmount,'') as SumAmount
+FROM #base_app b
+JOIN {_appSettings.DATABASEK2}.[application] a WITH (NOLOCK) ON a.applicationid = b.applicationid
+JOIN {_appSettings.DATABASEK2}.[applicationextend] appex WITH (NOLOCK) ON appex.applicationid = a.applicationid
+JOIN {_appSettings.SGDIRECT}.[auto_sale_pos_header] h WITH (NOLOCK) ON h.apporderno = a.applicationcode
+JOIN {_appSettings.DATABASEK2}.[customer] cus WITH (NOLOCK) ON cus.customerid = a.customerid
+LEFT JOIN {_appSettings.DATABASEK2}.[application_esig_status] c WITH (NOLOCK) ON c.application_code = a.applicationcode
+LEFT JOIN #contracts_temp con ON con.documentno = a.applicationcode
+LEFT JOIN (
+    SELECT documentno, COUNT(*) AS numdoc
+    FROM #contracts_temp
+    GROUP BY documentno
+) checkcon ON checkcon.documentno = a.applicationcode
+LEFT JOIN #serials serials ON serials.apporderno = a.applicationcode
+LEFT JOIN #payment p ON p.applicationcode = a.applicationcode
+WHERE a.applicationstatusid NOT IN ('REVISING')
+AND (ISNULL(@status, '') = '' OR a.applicationstatusid = @status)
+AND CONVERT(DATE, a.applicationdate, 23) >= '2024-05-01'
+AND (ISNULL(@AccountNo, '') = '' OR a.accountno = @AccountNo)
+AND (ISNULL(@ApplicationCode, '') = '' OR a.applicationcode = @ApplicationCode)
+AND (ISNULL(@ProductSerialNo, '') = '' OR a.productserialno = @ProductSerialNo)
+AND (ISNULL(@area, '') = '' OR a.AreaID = @area)
+AND (ISNULL(@department, '') = '' OR a.DepartmentID = @department)
+AND (ISNULL(@CustomerID, '') = '' OR a.customerid = @CustomerID)
+AND (ISNULL(@CustomerName, '') = '' OR cus.firstname + ' ' + cus.lastname LIKE '%' + @CustomerName + '%')
+ORDER BY a.applicationdate DESC;
+
+-- ล้าง temp tables
+DROP TABLE #contracts_temp;
+DROP TABLE #serials;
+DROP TABLE #payment;
+DROP TABLE #base_app;";
 
 
                     if(null != _ApplicationModel.department)
@@ -538,7 +470,7 @@ namespace App.Controllers
                 //if (isWithinPeriod)
                 //{
                     SqlConnection connection = new SqlConnection();
-                    connection.ConnectionString = strConnString;
+                    connection.ConnectionString = _appSettings.strConnString;
                     connection.Open();
 
                     GetApplication _GetApplication = new GetApplication();
@@ -557,7 +489,7 @@ namespace App.Controllers
 
 
                     SqlCommand sqlCommand;
-                    string strSQL = DATABASEK2 + ".[CancelApplication]";
+                    string strSQL = _appSettings.DATABASEK2 + ".[CancelApplication]";
                     sqlCommand = new SqlCommand(strSQL, connection);
                     sqlCommand.CommandType = CommandType.StoredProcedure;
                     sqlCommand.Parameters.AddWithValue("ApplicationCode", _GetApplicationRespone.ApplicationCode);
@@ -598,11 +530,11 @@ namespace App.Controllers
                         {
                             string jsonBody = JsonConvert.SerializeObject(requestBody);
 
-                            client.DefaultRequestHeaders.Add("apikey", ApiKey);
+                            client.DefaultRequestHeaders.Add("apikey", _appSettings.Apikey);
                             client.DefaultRequestHeaders.Add("user", "DEV");
 
                             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                            HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/sgesig/Service/C100_Status", content);
+                            HttpResponseMessage responseDevice = await client.PostAsync(_appSettings.SGAPIESIG + "/sgesig/Service/C100_Status", content);
                             int DeviceStatusCode = (int)responseDevice.StatusCode;
 
                             Log.Debug("API BODY RESPONE : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
@@ -655,7 +587,7 @@ namespace App.Controllers
             try
             {
 
-                HttpWebRequest request = CreateWebRequest(WSCANCEL);
+                HttpWebRequest request = CreateWebRequest(_appSettings.WSCANCEL);
 
                 XmlDocument soapEnvelopeXml = new XmlDocument();
                 soapEnvelopeXml.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -718,14 +650,14 @@ namespace App.Controllers
                 var body = "";
                 ServicePointManager.Expect100Continue = true;
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                var client = new RestClient(UrlEztax+ "/api/auth"); 
+                var client = new RestClient(_appSettings.UrlEztax + "/api/auth"); 
                 client.Timeout = 60000;
                 var request = new RestRequest(Method.POST);
                 var Arr_Body = new
                 {
-                    username = UsernameEztax,
-                    password = PasswordEztax,
-                    client_id = ClientIdEztax
+                    username = _appSettings.UsernameEztax,
+                    password = _appSettings.PasswordEztax,
+                    client_id = _appSettings.ClientIdEztax
                 };
                 body = JsonConvert.SerializeObject(Arr_Body);
                 request.AddParameter("application/json", body, ParameterType.RequestBody);
@@ -770,7 +702,7 @@ namespace App.Controllers
                 Log.Debug(JsonConvert.SerializeObject(_GetApplication));
                 System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls11;
 
-                using (var connection = new SqlConnection(strConnString))
+                using (var connection = new SqlConnection(_appSettings.strConnString))
                 {
                     string sql = @$"SELECT app.applicationid,
                                        app.accountno,
@@ -793,9 +725,9 @@ namespace App.Controllers
                                             ELSE '0'
                                         END as getPaid,
                                         (app.FirstPaymentAmount + FeeRate) as FirstPaymentAmount
-                                FROM {DATABASEK2}.[application] app WITH (NOLOCK)
-                                LEFT JOIN {DATABASEK2}.[customer] cus WITH (NOLOCK) ON cus.customerid = app.customerid
-                                LEFT JOIN {SGCROSSBANK}.[SG_PAYMENT_REALTIME] p WITH (NOLOCK) ON app.Ref4 = p.ref1
+                                FROM {_appSettings.DATABASEK2}.[application] app WITH (NOLOCK)
+                                LEFT JOIN {_appSettings.DATABASEK2}.[customer] cus WITH (NOLOCK) ON cus.customerid = app.customerid
+                                LEFT JOIN {_appSettings.SGCROSSBANK}.[SG_PAYMENT_REALTIME] p WITH (NOLOCK) ON app.Ref4 = p.ref1
                                 WHERE app.applicationcode = @ApplicationCode ";
 
                     _GetApplicationRespone = await connection.QuerySingleOrDefaultAsync<GetApplicationRespone>(sql, new { ApplicationCode = _GetApplication.ApplicationCode });
@@ -844,10 +776,10 @@ namespace App.Controllers
             {
 
                 SqlConnection connection = new SqlConnection();
-                connection.ConnectionString = strConnString;
+                connection.ConnectionString = _appSettings.strConnString;
                 connection.Open();
                 SqlCommand sqlCommand;
-                string strSQL = DATABASEK2 + ".[GetStatusClosedSGFinance]";
+                string strSQL = _appSettings.DATABASEK2 + ".[GetStatusClosedSGFinance]";
                 sqlCommand = new SqlCommand(strSQL, connection);
                 sqlCommand.CommandType = CommandType.StoredProcedure;
                 sqlCommand.Parameters.AddWithValue("ApplicationCode", _C100StatusRq.ApplicationCode);
@@ -880,11 +812,11 @@ namespace App.Controllers
                     {
                         string jsonBody = JsonConvert.SerializeObject(requestBody);
 
-                        client.DefaultRequestHeaders.Add("apikey", ApiKey);
+                        client.DefaultRequestHeaders.Add("apikey", _appSettings.Apikey);
                         client.DefaultRequestHeaders.Add("user", "DEV");
 
                         var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                        HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG+ "/sgesig/Service/C100_Status", content);
+                        HttpResponseMessage responseDevice = await client.PostAsync(_appSettings.SGAPIESIG + "/sgesig/Service/C100_Status", content);
                         int DeviceStatusCode = (int)responseDevice.StatusCode;
 
                         Log.Debug("API BODY RESPONE : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
@@ -929,11 +861,11 @@ namespace App.Controllers
                 {
                     string jsonBody = JsonConvert.SerializeObject(requestBody);
 
-                    client.DefaultRequestHeaders.Add("apikey", ApiKey);
+                    client.DefaultRequestHeaders.Add("apikey", _appSettings.Apikey);
                     client.DefaultRequestHeaders.Add("user", "DEV");
 
                     var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                    HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/sgesig/api/v2/GenEsignature", content);
+                    HttpResponseMessage responseDevice = await client.PostAsync(_appSettings.SGAPIESIG + "/sgesig/api/v2/GenEsignature", content);
                     int DeviceStatusCode = (int)responseDevice.StatusCode;
 
                     Log.Debug("API RESPONE : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
@@ -979,14 +911,14 @@ namespace App.Controllers
                     {
                         string jsonBody = JsonConvert.SerializeObject(requestBody);
 
-                        client.DefaultRequestHeaders.Add("apikey", ApiKey);
+                        client.DefaultRequestHeaders.Add("apikey", _appSettings.Apikey);
                         client.DefaultRequestHeaders.Add("user", "DEV");
 
                         var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
                         HttpResponseMessage responseDevice;
 
-                        responseDevice = await client.PostAsync(SGAPIESIG + "/sgesig/SubmitSale", content);
+                        responseDevice = await client.PostAsync(_appSettings.SGAPIESIG + "/sgesig/SubmitSale", content);
 
 
                         int DeviceStatusCode = (int)responseDevice.StatusCode;
@@ -1032,11 +964,11 @@ namespace App.Controllers
                 {
                     string jsonBody = JsonConvert.SerializeObject(requestBody);
 
-                    client.DefaultRequestHeaders.Add("apikey", ApiKey);
+                    client.DefaultRequestHeaders.Add("apikey", _appSettings.Apikey);
                     client.DefaultRequestHeaders.Add("user", "DEV");
 
                     var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                    HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/sgesig/Service/RegisIMEI", content);
+                    HttpResponseMessage responseDevice = await client.PostAsync(_appSettings.SGAPIESIG + "/sgesig/Service/RegisIMEI", content);
                     int DeviceStatusCode = (int)responseDevice.StatusCode;
                     Log.Debug("API RETURN : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
                     if (responseDevice.IsSuccessStatusCode)
@@ -1086,10 +1018,10 @@ namespace App.Controllers
                 {
                     string jsonBody = JsonConvert.SerializeObject(requestBody);
 
-                    client.DefaultRequestHeaders.Add("apikey", ApiKey);
+                    client.DefaultRequestHeaders.Add("apikey", _appSettings.Apikey);
 
                     var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-                    HttpResponseMessage responseDevice = await client.PostAsync(SGAPIESIG + "/c100/v2/SgFinance/PaymentAdjust", content);
+                    HttpResponseMessage responseDevice = await client.PostAsync(_appSettings.SGAPIESIG + "/c100/v2/SgFinance/PaymentAdjust", content);
                     int DeviceStatusCode = (int)responseDevice.StatusCode;
                     Log.Debug("API RETURN : " + JsonConvert.SerializeObject(responseDevice.Content.ReadAsStringAsync()));
                     if (!responseDevice.IsSuccessStatusCode)
@@ -1107,6 +1039,13 @@ namespace App.Controllers
                 Log.Debug("RETURN : " + result);
                 return result;
             }
+        }
+
+        public async Task<RegisIMEIRespone> LinkPayment([FromBody] GetApplication _GetApplication)
+        {
+            var result = new RegisIMEIRespone();
+            result = await _iPaymentService.LinkPayment(_GetApplication);
+            return result;
         }
 
         [HttpGet("CheckSession")]
