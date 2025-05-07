@@ -15,10 +15,6 @@ namespace App.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly AppSettings _appSettings;
-
-        private const string FullName = "";
-        private const string EMP_CODE = "";
-        private const string RoleDescription = "";
         public LoginController(ILogger<HomeController> logger, AppSettings appSettings)
         {
             _appSettings = appSettings;
@@ -26,12 +22,14 @@ namespace App.Controllers
 
         public IActionResult Index()
         {
+            ViewBag.Env = _appSettings.Env;
             return View();
         }
 
         [HttpPost]
         public async Task<User> Login([FromBody] Login _Login)
         {
+            
             User _User = new User();
 
             SqlConnection connection = new SqlConnection();
@@ -114,7 +112,7 @@ namespace App.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Logout()
-        {
+        { 
             // Clear the session
             HttpContext.Session.Clear();
 

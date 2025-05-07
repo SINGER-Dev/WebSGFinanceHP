@@ -26,19 +26,15 @@
                 {
                     <tr>
                         <td>
-                            @if (result.ApplicationStatusID == "CANCELLED" && result.flag_status == "Y")
-                            {
-                                @* <div class="dropdown">
-                                    <svg style="cursor:pointer" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
-                                        <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
-                                    </svg>
+                            @* <div class="dropdown">
+                                <svg style="cursor:pointer" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                                    <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+                                </svg>
 
-                                    <ul class="dropdown-menu dropdown-menu-dark bg-light" aria-labelledby="dropdownMenuButton1">
-                                        <li><a class="dropdown-item text-black bg-warning" onclick="location.href = '@Url.Action("ChangePaymentDown", "Home", new { ApplicationCode = @result.ApplicationCode,Ref4 = @result.Ref4 })'">Change Payment</a></li>
-                                    </ul>
-                                </div> *@
-                            }
-
+                                <ul class="dropdown-menu dropdown-menu-dark bg-light" aria-labelledby="dropdownMenuButton1">
+                                    <li><a class="dropdown-item text-black bg-warning" onclick="location.href = '@Url.Action("FormCancel", "Home", new { ApplicationCode = @result.RefCode })'">ยกเลิกใบคำขอ</a></li>
+                                </ul>
+                            </div> *@
                         </td>
                         <td>
                             <B>วันที่สร้างใบคำขอ : </B> @result.ApplicationDate <br>
@@ -58,8 +54,8 @@
                             <B>เบอร์พนักงานขาย : </B>@result.SaleTelephoneNo
                         </td>
                         <td>
-                            <span class="d-inline-block text-truncate" data-bs-toggle="tooltip" data-bs-placement="top" title="@result.ProductModelName">@result.ProductModelName  </span><br>
-                            <B>Serial / IMEI : </B>@result.ProductSerialNo<br>
+                            <span class="d-inline-block text-truncate" style="max-width: 200px;" data-bs-toggle="tooltip" data-bs-placement="top" title="@result.ProductModelName">@result.ProductModelName  </span><br>
+                            <span class="d-inline-block text-truncate" style="max-width: 200px;" data-bs-toggle="tooltip" data-bs-placement="top" title="@result.ProductSerialNo">Serial / IMEI : @result.ProductSerialNo  </span><br>
                             <B>InvoiceNo : </B>@result.InvoiceNo
                         </td>
 
@@ -72,6 +68,11 @@
                             else
                             {
                                 <span class="badge bg-warning" style="color:#000">@result.ApplicationStatusID</span>
+                                if(@result.ApplicationStatusID.ToUpper() == "DRAFT")
+                                {
+                                    <i class="StartFlow fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
+                                }
+                                
                             }
                             @if (@result.datenowcheck != "1")
                             {
@@ -108,7 +109,7 @@
                             }
                             else
                             {
-                                <span class="badge bg-secondary">ยังไม่ชำระเงิน</span>
+                                <span class="badge bg-secondary">รอการชำระเงิน</span>
                                 <i class="LinkPayment fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
                             }
                         </td>

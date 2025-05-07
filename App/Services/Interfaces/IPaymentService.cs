@@ -3,5 +3,5 @@ using Microsoft.AspNetCore.Mvc;
 
 public interface IPaymentService
 {
-    Task<RegisIMEIRespone> LinkPayment([FromBody] GetApplication _GetApplication);
+    Task<MessageReturn> LinkPayment([FromBody] GenEsignatureRq _GetApplication);
 }

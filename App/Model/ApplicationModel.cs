@@ -25,7 +25,11 @@
         public string? StatusCode { get; set; }
         public string? Message { get; set; }
     }
-
+    public class StartFlowRq
+    {
+        public string? ApplicationCode { get; set; }
+    }
+    
     public class RegisIMEIRequest
     {
         public string? SerrialNo { get; set; }
@@ -45,6 +49,27 @@
     public class C100StatusRq
     {
         public string ApplicationCode { get; set; }
+    }
+    public class UpDateContractHeaderRq
+    {
+        public string? ApplicationCode { get; set; }
+        public string? AccountNo { get; set; }
+    }
+    
+    public class GenEsignatureRq
+    {
+        public string? ApplicationCode { get; set; }
+    }
+    public class ContractRp
+    {
+        public int IsExist { get; set; } = 0;
+        public string? AccountNo { get; set; }
+    }
+    public class ValidatePOSRq
+    {
+        public string? ApplicationCode { get; set; }
+        public string? AccountNo { get; set; }
+        public string? MessageError { get; set; }
     }
     public class getDataRef2
     {

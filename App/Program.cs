@@ -1,7 +1,10 @@
 ﻿using App.Infrastructure;
 using App.Middleware;
 using App.Model;
+using App.Repositories.Implementations;
+using App.Repositories.Interfaces;
 using App.Services.Implementations;
+using App.Services.Interfaces;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 using Serilog;
@@ -32,10 +35,17 @@ builder.Services.AddSingleton(resolver =>
 });
 builder.Services.AddServiceCollection(builder.Configuration);
 
+//Service
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IGenEsignatureService, GenEsignatureService>();
+builder.Services.AddScoped<IStartFlowService, StartFlowService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+//Repository
+builder.Services.AddScoped<IGenEsignatureRepository, GenEsignatureRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<ISearchRepository, SearchRepository>();
 
 builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
 builder.Services.AddDistributedMemoryCache();

@@ -390,235 +390,17 @@ function searchForm() {
             $('.loaddong').css('display', 'none');
             $('#searchResults').html(result); // Update search results
 
-            $(".C100StatusClosed").click(function () {
+            // ✅ ทำลาย DataTable เดิม (ถ้ามี)
+            if ($.fn.DataTable.isDataTable('#example')) {
+                $('#example').DataTable().destroy();
+            }
 
-                var data = {
-                    ApplicationCode: $(this).data("applicationcode")
-                };
-
-                Swal.fire({
-                    title: "ยืนยันการเปลี่ยนสถานะรายการ?",
-                    showCancelButton: true,
-                    confirmButtonText: "ยืนยัน",
-                    cancelButtonText: "ออก",
-                }).then((result) => {
-                    /* Read more about isConfirmed, isDenied below */
-                    if (result.isConfirmed) {
-
-                        var formData = $(this).serialize(); // Serialize form data
-                        $.ajax({
-                            url: "./Home/GetStatusClosedSGFinance", // Action URL
-                            type: "POST", // Method (POST in this case)
-                            contentType: 'application/json',
-                            data: JSON.stringify(data),
-                            success: function (result) {
-                                if (result.message == "PASS") {
-                                    Swal.fire({
-                                        title: "เปลี่ยนสถานะรายการ!",
-                                        text: "เปลี่ยนสถานะรายการสำเร็จ",
-                                        icon: "success"
-                                    });
-                                }
-                                else {
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Oops...",
-                                        text: result
-                                    });
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.error(error);
-                            }
-                        });
-                    }
-                });
-
-            });
-
-            $(".GenEsignature").click(function () {
-
-                var data = {
-                    ApplicationCode: $(this).data("applicationcode")
-                };
-
-                Swal.fire({
-                    title: "ยืนยันการส่งลิงค์ลงนามอีกครั้ง?",
-                    showCancelButton: true,
-                    confirmButtonText: "ยืนยัน",
-                    cancelButtonText: "ออก",
-                }).then((result) => {
-                    /* Read more about isConfirmed, isDenied below */
-                    if (result.isConfirmed) {
-
-                        var formData = $(this).serialize(); // Serialize form data
-                        $.ajax({
-                            url: "./Home/GenEsignature", // Action URL
-                            type: "POST", // Method (POST in this case)
-                            contentType: 'application/json',
-                            data: JSON.stringify(data),
-                            success: function (result) {
-                                if (result.message == "Success.") {
-                                    Swal.fire({
-                                        title: "ส่งลิงคิ์ลงนาม!",
-                                        text: "ส่งลิงค์ลงนามเสำเร็จ",
-                                        icon: "success"
-                                    });
-                                }
-                                else {
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Oops...",
-                                        text: result
-                                    });
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.error(error);
-                            }
-                        });
-                    }
-                });
-
-            });
-
-            $(".GetAddTNewSalesNewSGFinance").click(function () {
-
-                var data = {
-                    ApplicationCode: $(this).data("applicationcode")
-                };
-
-                Swal.fire({
-                    title: "ยืนยันรายงานขายอีกครั้ง?",
-                    showCancelButton: true,
-                    confirmButtonText: "ยืนยัน",
-                    cancelButtonText: "ออก",
-                }).then((result) => {
-                    /* Read more about isConfirmed, isDenied below */
-                    if (result.isConfirmed) {
-
-                        var formData = $(this).serialize(); // Serialize form data
-                        $.ajax({
-                            url: "./Home/GetAddTNewSalesNewSGFinance", // Action URL
-                            type: "POST", // Method (POST in this case)
-                            contentType: 'application/json',
-                            data: JSON.stringify(data),
-                            success: function (result) {
-                                if (result.message == "PASS") {
-                                    Swal.fire({
-                                        title: "ยืนยันรายงานขาย!",
-                                        text: "ยืนยันรายงานขายสำเร็จ",
-                                        icon: "success"
-                                    });
-                                }
-                                else {
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Oops...",
-                                        text: result
-                                    });
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.error(error);
-                            }
-                        });
-                    }
-                });
-
-            });
-
-            $(".RegisIMEI").click(function () {
-
-                var data = {
-                    ApplicationCode: $(this).data("applicationcode")
-                };
-
-                Swal.fire({
-                    title: "ยืนยันลงทะเบียนเครื่อง?",
-                    showCancelButton: true,
-                    confirmButtonText: "ยืนยัน",
-                    cancelButtonText: "ออก",
-                }).then((result) => {
-                    /* Read more about isConfirmed, isDenied below */
-                    if (result.isConfirmed) {
-
-                        var formData = $(this).serialize(); // Serialize form data
-                        $.ajax({
-                            url: "./Home/RegisIMEI", // Action URL
-                            type: "POST", // Method (POST in this case)
-                            contentType: 'application/json',
-                            data: JSON.stringify(data),
-                            success: function (result) {
-                                if (result.statusCode == "PASS") {
-                                    Swal.fire({
-                                        title: "ลงทะเบียนเครื่อง!",
-                                        text: "ลงทะเบียนเครื่องสำเร็จ",
-                                        icon: "success"
-                                    });
-                                }
-                                else {
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Oops...",
-                                        text: result.statusCode.message
-                                    });
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.error(error);
-                            }
-                        });
-                    }
-                });
-
-            });
-
-            $(".LinkPayment").click(function () {
-
-                var data = {
-                    ApplicationCode: $(this).data("applicationcode")
-                };
-
-                Swal.fire({
-                    title: "ยืนยันส่งลิงค์ชำระเงิน?",
-                    showCancelButton: true,
-                    confirmButtonText: "ยืนยัน",
-                    cancelButtonText: "ออก",
-                }).then((result) => {
-                    /* Read more about isConfirmed, isDenied below */
-                    if (result.isConfirmed) {
-
-                        var formData = $(this).serialize(); // Serialize form data
-                        $.ajax({
-                            url: "./Home/LinkPayment", // Action URL
-                            type: "POST", // Method (POST in this case)
-                            contentType: 'application/json',
-                            data: JSON.stringify(data),
-                            success: function (result) {
-                                if (result.statusCode == "PASS") {
-                                    Swal.fire({
-                                        title: "ส่งลิงค์ชำระเงินสำเร็จ!",
-                                        text: "ส่งลิงค์ชำระเงินสำเร็จ",
-                                        icon: "success"
-                                    });
-                                }
-                                else {
-                                    Swal.fire({
-                                        icon: "error",
-                                        title: "Oops...",
-                                        text: result.statusCode.message
-                                    });
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.error(error);
-                            }
-                        });
-                    }
-                });
-
-            });
+            // ✅ Attach ทุกปุ่มโดยใช้ helper
+            handleAction(".GenEsignature", "./GenEsignature/GenEsignature", "ยืนยันการตรวจสอบลิงค์ลงนาม?", "ดำเนินการตรวจสอบสำเร็จ!");
+            handleAction(".C100StatusClosed", "./Home/GetStatusClosedSGFinance", "ยืนยันการเปลี่ยนสถานะรายการ?", "อัพเดทสถานะรายการสำเร็จ!");
+            handleAction(".RegisIMEI", "./Home/RegisIMEI", "ยืนยันลงทะเบียนเครื่อง?", "ลงทะเบียนเครื่องสำเร็จ!");
+            handleAction(".LinkPayment", "./Home/LinkPayment", "ยืนยันส่งลิงค์ชำระเงิน?", "ส่งลิงค์ชำระเงินสำเร็จ!");
+            handleAction(".StartFlow", "./StartFlow/StartFlow", "ยืนยันการส่งสถานะรออนุมัติ?", "ยืนยันการส่งสถานะรออนุมัติสำเร็จ!");
 
             const dt = $('#example').DataTable({
                 scrollX: true,
@@ -637,7 +419,47 @@ function searchForm() {
         }
     });
 }
+// ✅ ฟังก์ชันช่วยสำหรับทุกปุ่ม
+function handleAction(buttonClass, url, swalTitle, successMessage) {
+    $(document).off("click", buttonClass).on("click", buttonClass, function () {
+        const data = { ApplicationCode: $(this).data("applicationcode") };
 
+        Swal.fire({
+            title: swalTitle,
+            showCancelButton: true,
+            confirmButtonText: "ยืนยัน",
+            cancelButtonText: "ออก"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function (result) {
+                        if (result.statusCode === "200" || result.message === "PASS") {
+                            Swal.fire({
+                                title: successMessage,
+                                text: result.message || '',
+                                icon: "success"
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "เกิดข้อผิดพลาด",
+                                text: result.message || JSON.stringify(result)
+                            });
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                        Swal.fire("Error", "เกิดข้อผิดพลาดในการเรียก API", "error");
+                    }
+                });
+            }
+        });
+    });
+}
 function checkSession() {
     $.ajax({
         url: '/checksession',
