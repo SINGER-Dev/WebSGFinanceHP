@@ -24,7 +24,7 @@ namespace App.Repositories.Implementations
                 SELECT 1
                 FROM {_appSettings.DATABASEK2}.[Application] WITH (NOLOCK)
                 WHERE ApplicationCode = @ApplicationCode
-                AND ApplicationStatusID = 'CLOSING'
+                AND ApplicationStatusID IN ('CLOSING','SUBMITTED')
             ) THEN 1 ELSE 0 END AS IsExist
             ";
             SqlConnection connection = new SqlConnection();

@@ -25,9 +25,16 @@
         public string? StatusCode { get; set; }
         public string? Message { get; set; }
     }
+    public class ApiStartFlowRp
+    {
+        public string status { get; set; }
+        public string message { get; set; }
+        public object errorsDetail { get; set; }
+        public object result { get; set; }
+    }
     public class StartFlowRq
     {
-        public string? ApplicationCode { get; set; }
+        public string? RefCode { get; set; }
     }
     
     public class RegisIMEIRequest

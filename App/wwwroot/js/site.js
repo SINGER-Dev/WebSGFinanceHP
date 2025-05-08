@@ -399,7 +399,7 @@ function searchForm() {
             handleAction(".GenEsignature", "./GenEsignature/GenEsignature", "ยืนยันการตรวจสอบลิงค์ลงนาม?", "ดำเนินการตรวจสอบสำเร็จ!");
             handleAction(".C100StatusClosed", "./Home/GetStatusClosedSGFinance", "ยืนยันการเปลี่ยนสถานะรายการ?", "อัพเดทสถานะรายการสำเร็จ!");
             handleAction(".RegisIMEI", "./Home/RegisIMEI", "ยืนยันลงทะเบียนเครื่อง?", "ลงทะเบียนเครื่องสำเร็จ!");
-            handleAction(".LinkPayment", "./Home/LinkPayment", "ยืนยันส่งลิงค์ชำระเงิน?", "ส่งลิงค์ชำระเงินสำเร็จ!");
+            handleAction(".LinkPayment", "./GenLinkPayment/LinkPayment", "ยืนยันส่งลิงค์ชำระเงิน?", "ส่งลิงค์ชำระเงินสำเร็จ!");
             handleAction(".StartFlow", "./StartFlow/StartFlow", "ยืนยันการส่งสถานะรออนุมัติ?", "ยืนยันการส่งสถานะรออนุมัติสำเร็จ!");
 
             const dt = $('#example').DataTable({
@@ -422,7 +422,14 @@ function searchForm() {
 // ✅ ฟังก์ชันช่วยสำหรับทุกปุ่ม
 function handleAction(buttonClass, url, swalTitle, successMessage) {
     $(document).off("click", buttonClass).on("click", buttonClass, function () {
-        const data = { ApplicationCode: $(this).data("applicationcode") };
+        let data;
+        if (url == "./StartFlow/StartFlow") {
+            data = { RefCode: $(this).data("refcode") };
+        }
+        else {
+            data = { ApplicationCode: $(this).data("applicationcode") };
+        }
+        console.log(data);
 
         Swal.fire({
             title: swalTitle,

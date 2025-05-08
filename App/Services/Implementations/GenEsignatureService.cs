@@ -238,7 +238,7 @@ namespace App.Services.Implementations
             {
                 var requestBody = new
                 {
-                    APPLICATION_CODE = genEsignatureRq.ApplicationCode
+                    applicationCode = genEsignatureRq.ApplicationCode
                 };
 
                 string jsonBody = JsonConvert.SerializeObject(requestBody);
@@ -247,7 +247,7 @@ namespace App.Services.Implementations
                 _httpClient.DefaultRequestHeaders.Remove("apikey"); // กันค่าเดิมซ้ำซ้อน
                 _httpClient.DefaultRequestHeaders.Add("apikey", _appSettings.Apikey);
 
-                var url = $"{_appSettings.SGAPIESIG}/sgesig/api/v2/GenEsignature";
+                var url = $"{_appSettings.WsLos}/v1/LOS/SGF_ReCreateHeader'";
                 var response = await _httpClient.PostAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -255,12 +255,15 @@ namespace App.Services.Implementations
 
                 if (response.IsSuccessStatusCode)
                 {
-                    result = JsonConvert.DeserializeObject<MessageReturn>(responseContent) ?? new MessageReturn();
+                    result.StatusCode = "200";
+                    result.Message = "PASS";
+                    Log.Information("OrderID: {OrderID} | Status: SUCCESS | Desc: {Desc} | Type: {Type}", genEsignatureRq.ApplicationCode, $"By {empCode} | {fullName} | {JsonConvert.SerializeObject(responseContent)}", "GenAutoSaleHeader");
                 }
                 else
                 {
-                    result.StatusCode = ((int)response.StatusCode).ToString();
-                    result.Message = "Error calling GenAutoSaleHeader API";
+                    result.StatusCode = "500";
+                    result.Message = "SMS_SEND_FAILED";
+                    Log.Error("OrderID: {OrderID} | Status: ERROR | Desc: {Desc} | Type: {Type}", genEsignatureRq.ApplicationCode, $"By {empCode} | {fullName} | {JsonConvert.SerializeObject(responseContent)}", "GenAutoSaleHeader");
                 }
             }
             catch (Exception ex)

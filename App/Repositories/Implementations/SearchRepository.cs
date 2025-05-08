@@ -26,9 +26,23 @@ DECLARE
 
 -- STEP 0: ดึง application เฉพาะของ STL ที่อยู่ในช่วงวันนี้
 SELECT 
-    a.applicationid, 
-    a.applicationcode, 
-    a.applicationdate,
+    a.applicationid,
+	a.applicationcode,
+	a.accountno,
+	a.saledepcode,
+    a.AreaID,
+    a.DepartmentID,
+    a.productserialno,
+	a.saledepname,
+	ISNULL(CONVERT(NVARCHAR, a.applicationdate, 23),'') AS ApplicationDate,
+	ISNULL(CONVERT(NVARCHAR, a.applicationdate, 20),'') AS ApplicationDate2,
+	a.productid,
+	a.productmodelname,
+	a.customerid,
+	a.salename,
+	a.saletelephoneno,
+	a.approveddate,
+	a.applicationstatusid,
     h.deliveryflag,
     h.deliverydate,
     h.InvoiceNo,
@@ -38,7 +52,7 @@ SELECT
 INTO #base_app
 FROM {_appSettings.DATABASEK2}.[application] a WITH (NOLOCK)
 JOIN {_appSettings.DATABASEK2}.[applicationextend] ae WITH (NOLOCK) ON ae.applicationid = a.applicationid
-JOIN {_appSettings.SGDIRECT}.[auto_sale_pos_header] h WITH (NOLOCK) ON h.apporderno = a.applicationcode
+LEFT JOIN {_appSettings.SGDIRECT}.[auto_sale_pos_header] h WITH (NOLOCK) ON h.apporderno = a.applicationcode
 WHERE a.applicationdate >= @TodayStart AND a.applicationdate < @TomorrowStart
 AND ae.ou_code LIKE 'STL%';
 
@@ -70,31 +84,33 @@ JOIN {_appSettings.SGCROSSBANK}.[sg_payment_realtime] p WITH (NOLOCK) ON a.ref4 
 LEFT JOIN (
     SELECT Ref1, SUM(TRY_CAST(Amount AS DECIMAL(18, 2))) AS SumAmount
     FROM {_appSettings.SGCROSSBANK}.[BANK_TRANSACTION] WITH (NOLOCK)
+    WHERE ISNUMERIC(Amount) = 1
     GROUP BY Ref1
 ) bank ON bank.Ref1 = p.ref1
 WHERE p.flag_status = 'Y' AND ISNULL(a.ref4, '') <> '';
 
 -- STEP 4: MAIN QUERY
 SELECT
-    a.applicationid,
-    a.applicationcode,
-    a.accountno,
-    a.saledepcode,
-    a.saledepname,
-    CONVERT(NVARCHAR, a.applicationdate, 23) AS ApplicationDate,
-    CONVERT(NVARCHAR, a.applicationdate, 20) AS ApplicationDate2,
-    a.productid,
-    a.productmodelname,
-    a.customerid,
+    b.applicationid,
+	b.applicationcode,
+	b.accountno,
+	b.saledepcode,
+	b.saledepname,
+	ISNULL(CONVERT(NVARCHAR, b.applicationdate, 23),'') AS ApplicationDate,
+	ISNULL(CONVERT(NVARCHAR, b.applicationdate, 20),'') AS ApplicationDate2,
+	b.productid,
+	b.productmodelname,
+	b.customerid,
+	b.salename,
+	b.saletelephoneno,
+	b.approveddate,
+	b.applicationstatusid,
     cus.firstname + ' ' + cus.lastname AS Cusname,
     cus.mobileno1 AS cusMobile,
-    a.salename,
-    a.saletelephoneno,
     ISNULL(serials.serials, '') AS ProductSerialNo,
-    a.applicationstatusid,
     CASE
-        WHEN con.signedstatus = 'COMP-Done' THEN 'เรียบร้อย'
-        WHEN con.signedstatus = 'Initial' THEN 'รอลงนาม'
+        WHEN ISNULL(con.signedstatus,'') = 'COMP-Done' THEN 'เรียบร้อย'
+        WHEN ISNULL(con.signedstatus,'') = 'Initial' THEN 'รอลงนาม'
         WHEN ISNULL(con.signedstatus, 'NULL') = 'NULL' THEN '-'
         ELSE con.signedstatus
     END AS signedStatus,
@@ -110,15 +126,14 @@ SELECT
         WHEN ISNULL(c.receive_flag, '0') = '1' THEN 'รับสินค้าแล้ว'
         ELSE 'ยังไม่รับสินค้า'
     END AS RECEIVE_FLAG,
-    a.approveddate,
     '-' AS numregis,
     CASE
         WHEN (ISNULL(c.esig_confirm_status, '0') = '1' AND con.signedstatus = 'COMP-Done') THEN 'เรียบร้อย'
-        WHEN (c.esig_confirm_status = '0' OR con.signedstatus = 'Initial') THEN 'รอลงนาม'
+        WHEN (ISNULL(c.esig_confirm_status, '0') = '0' OR con.signedstatus = 'Initial') THEN 'รอลงนาม'
         ELSE 'ลงนามไม่สำเร็จ'
     END AS signedText,
     CASE
-        WHEN checkcon.numdoc > 1 THEN 'พบรายการซ้ำ'
+        WHEN ISNULL(checkcon.numdoc,0) > 1 THEN 'พบรายการซ้ำ'
         ELSE 'ปกติ'
     END AS numdoc,
     b.refcode,
@@ -126,38 +141,37 @@ SELECT
     b.loantypecate,
     b.deliveryflag,
     CASE
-        WHEN b.deliveryflag = 1 THEN 'จัดส่งสินค้าเรียบร้อย'
+        WHEN ISNULL(b.deliveryflag,0) = 1 THEN 'จัดส่งสินค้าเรียบร้อย'
         ELSE 'อยู่ระหว่างการจัดส่งสินค้า'
     END AS DeliveryFlag,
     CONVERT(NVARCHAR, b.deliverydate, 20) AS DeliveryDate,
     ISNULL(p.ref1,'') AS Ref4,
     ISNULL(b.InvoiceNo,'') AS InvoiceNo,
     ISNULL(p.flag_status,'') as flag_status,
-    ISNULL(p.AMT_SHP_PAY,'') as AMT_SHP_PAY,
-	ISNULL(p.SumAmount,'') as SumAmount
+    ISNULL(p.AMT_SHP_PAY,0) as AMT_SHP_PAY,
+	ISNULL(p.SumAmount,0) as SumAmount
 FROM #base_app b
-JOIN {_appSettings.DATABASEK2}.[application] a WITH (NOLOCK) ON a.applicationid = b.applicationid
-JOIN {_appSettings.DATABASEK2}.[customer] cus WITH (NOLOCK) ON cus.customerid = a.customerid
-LEFT JOIN {_appSettings.DATABASEK2}.[application_esig_status] c WITH (NOLOCK) ON c.application_code = a.applicationcode
-LEFT JOIN #contracts_temp con ON con.documentno = a.applicationcode
+JOIN {_appSettings.DATABASEK2}.[customer] cus WITH (NOLOCK) ON cus.customerid = b.customerid
+LEFT JOIN {_appSettings.DATABASEK2}.[application_esig_status] c WITH (NOLOCK) ON c.application_code = b.applicationcode
+LEFT JOIN #contracts_temp con ON con.documentno = b.applicationcode
 LEFT JOIN (
     SELECT documentno, COUNT(*) AS numdoc
     FROM #contracts_temp
     GROUP BY documentno
-) checkcon ON checkcon.documentno = a.applicationcode
-LEFT JOIN #serials serials ON serials.apporderno = a.applicationcode
-LEFT JOIN #payment p ON p.applicationcode = a.applicationcode
-WHERE a.applicationstatusid NOT IN ('REVISING')
-AND (ISNULL(@status, '') = '' OR a.applicationstatusid = @status)
-AND CONVERT(DATE, a.applicationdate, 23) >= '2024-05-01'
-AND (ISNULL(@AccountNo, '') = '' OR a.accountno = @AccountNo)
-AND (ISNULL(@ApplicationCode, '') = '' OR a.applicationcode = @ApplicationCode)
-AND (ISNULL(@ProductSerialNo, '') = '' OR a.productserialno = @ProductSerialNo)
-AND (ISNULL(@area, '') = '' OR a.AreaID = @area)
-AND (ISNULL(@department, '') = '' OR a.DepartmentID = @department)
-AND (ISNULL(@CustomerID, '') = '' OR a.customerid = @CustomerID)
+) checkcon ON checkcon.documentno = b.applicationcode
+LEFT JOIN #serials serials ON serials.apporderno = b.applicationcode
+LEFT JOIN #payment p ON p.applicationcode = b.applicationcode
+WHERE b.applicationstatusid NOT IN ('REVISING')
+AND (ISNULL(@status, '') = '' OR b.applicationstatusid = @status)
+AND b.applicationdate >= '2024-05-01'
+AND (ISNULL(@AccountNo, '') = '' OR b.accountno = @AccountNo)
+AND (@ApplicationCode IS NULL OR b.ApplicationCode = @ApplicationCode OR b.refcode = @ApplicationCode)
+AND (ISNULL(@ProductSerialNo, '') = '' OR b.productserialno = @ProductSerialNo)
+AND (ISNULL(@area, '') = '' OR b.AreaID = @area)
+AND (ISNULL(@department, '') = '' OR b.DepartmentID = @department)
+AND (ISNULL(@CustomerID, '') = '' OR b.customerid = @CustomerID)
 AND (ISNULL(@CustomerName, '') = '' OR cus.firstname + ' ' + cus.lastname LIKE '%' + @CustomerName + '%')
-ORDER BY a.applicationdate DESC;
+ORDER BY b.applicationdate DESC;
 
 -- ล้าง temp tables
 DROP TABLE #contracts_temp;

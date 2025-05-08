@@ -24,5 +24,6 @@
         public string SGCESIGNATURE { get; set; }
         public string SGCROSSBANK { get; set; }
         public string CORELOAN { get; set; }
+        public string WsLos { get; set; }
     }
 }

@@ -70,7 +70,7 @@
                                 <span class="badge bg-warning" style="color:#000">@result.ApplicationStatusID</span>
                                 if(@result.ApplicationStatusID.ToUpper() == "DRAFT")
                                 {
-                                    <i class="StartFlow fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
+                                    <i class="StartFlow fa-solid fa-paper-plane" data-refcode="@result.RefCode" style="cursor: pointer;color: coral;"></i>
                                 }
                                 
                             }
@@ -96,22 +96,26 @@
                             <br />
 
                             <B>สถานะชำระเงิน : </B>
-                            @if (@result.flag_status == "Y")
+                            @if (@result.ApplicationStatusID.ToUpper() == "CLOSING" || @result.ApplicationStatusID.ToUpper() == "CLOSED" || @result.ApplicationStatusID.ToUpper() == "SUBMITTED")
                             {
-                                if (Convert.ToDecimal(@result.SumAmount) < Convert.ToDecimal(@result.AMT_SHP_PAY))
+                                @if (@result.flag_status == "Y")
                                 {
-                                    <span class="badge bg-danger">ชำระเงินไม่ครบ</span>
+                                    if (Convert.ToDecimal(@result.SumAmount) < Convert.ToDecimal(@result.AMT_SHP_PAY))
+                                    {
+                                        <span class="badge bg-danger">ชำระเงินไม่ครบ</span>
+                                    }
+                                    else if (Convert.ToDecimal(@result.SumAmount) == Convert.ToDecimal(@result.AMT_SHP_PAY))
+                                    {
+                                        <span class="badge bg-success">ชำระเงินแล้ว</span>
+                                    }
                                 }
-                                else if (Convert.ToDecimal(@result.SumAmount) == Convert.ToDecimal(@result.AMT_SHP_PAY))
+                                else
                                 {
-                                    <span class="badge bg-success">ชำระเงินแล้ว</span>
+                                    <span class="badge bg-secondary">รอการชำระเงิน</span>
+                                    <i class="LinkPayment fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
                                 }
                             }
-                            else
-                            {
-                                <span class="badge bg-secondary">รอการชำระเงิน</span>
-                                <i class="LinkPayment fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
-                            }
+                            
                         </td>
 
 

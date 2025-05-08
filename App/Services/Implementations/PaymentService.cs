@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Serilog;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection.Emit;
 using System.Text;
 
 namespace App.Services.Implementations
@@ -27,58 +28,54 @@ namespace App.Services.Implementations
         public async Task<MessageReturn> LinkPayment([FromBody] GenEsignatureRq genEsignatureRq)
         {
             MessageReturn result = new MessageReturn();
-
-            //เช็คสถานะใบคำขอ
-            int StatusPayment = await _repository.CheckValidateStatusPayment(genEsignatureRq);
-            if(StatusPayment <= 0)
-            {
-                result.StatusCode = "500";
-                result.Message = "ใบคำขอไม่ได้อยู่ในสถานะ CLOSING กรุณาติดต่อเจ้าหน้าที่";
-                return result;
-            }
-
-            // Use _httpContextAccessor.HttpContext to access HttpContext
             var session = _httpContextAccessor.HttpContext?.Session;
             var empCode = session?.GetString("EMP_CODE") ?? "UNKNOWN";
             var fullName = session?.GetString("FullName") ?? "UNKNOWN";
 
-            Log.Debug("OrderID: {OrderID} | Status: REQUEST | Desc: {Desc} | Type: {Type}",
-                genEsignatureRq.ApplicationCode,
-                $"By {empCode} | {fullName} | {JsonConvert.SerializeObject(genEsignatureRq)}",
-                "LinkPayment");
-
-
-            var url = _appSettings.LinkPayment;
-
-            var soapRequest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-            <soap12:Envelope xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:soap12=""http://www.w3.org/2003/05/soap-envelope"">
-              <soap12:Body>
-                <GenLinkWithSms xmlns=""http://tempuri.org/"">
-                  <AppCode>{genEsignatureRq.ApplicationCode}</AppCode>
-                </GenLinkWithSms>
-              </soap12:Body>
-            </soap12:Envelope>";
-
-            var content = new StringContent(soapRequest, Encoding.UTF8, "application/soap+xml");
-
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/soap+xml"));
-
             try
             {
-                var response = await _httpClient.PostAsync(url, content);
-                response.EnsureSuccessStatusCode();
+                //เช็คสถานะใบคำขอ
+                int StatusPayment = await _repository.CheckValidateStatusPayment(genEsignatureRq);
+                if (StatusPayment <= 0)
+                {
+                    result.StatusCode = "500";
+                    result.Message = "สถานะใบคำขอไม่ถูกต้อง กรุณาติดต่อเจ้าหน้าที่";
+                    return result;
+                }
 
-                var responseBody = await response.Content.ReadAsStringAsync();
+                var requestData = new
+                {
+                    applicationCode = genEsignatureRq.ApplicationCode
+                };
 
-                result.StatusCode = "200";
-                result.Message = "SUCCESS";
-                Log.Debug(responseBody);
+                var json = JsonConvert.SerializeObject(requestData);
+                using var request = new HttpRequestMessage(HttpMethod.Post, _appSettings.WsLos+ "/v1/LOS/SGF_QrPayment")
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                var response = await _httpClient.SendAsync(request);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    result.StatusCode = "200";
+                    result.Message = "PASS";
+                    Log.Information("OrderID: {OrderID} | Status: SUCCESS | Desc: {Desc} | Type: {Type}", genEsignatureRq.ApplicationCode, $"By {empCode} | {fullName} | {JsonConvert.SerializeObject(responseContent)}", "StartFlow");
+                }
+                else
+                {
+                    result.StatusCode = "500";
+                    result.Message = "SMS_SEND_FAILED";
+                    Log.Error("OrderID: {OrderID} | Status: ERROR | Desc: {Desc} | Type: {Type}", genEsignatureRq.ApplicationCode, $"By {empCode} | {fullName} | {JsonConvert.SerializeObject(responseContent)}", "StartFlow");
+                }
             }
             catch (Exception ex)
             {
                 result.StatusCode = "500";
                 result.Message = ex.Message;
-                Log.Error($"Error: {ex.Message}");
+                Log.Error("OrderID: {OrderID} | Status: ERROR | Desc: {Desc} | Type: {Type}", genEsignatureRq.ApplicationCode, $"By {empCode} | {fullName} | {ex.Message}", "StartFlow");
             }
 
             return result;
