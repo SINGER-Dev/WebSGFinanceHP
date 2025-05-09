@@ -10,10 +10,12 @@ namespace App.Repositories.Implementations
     public class PaymentRepository : IPaymentRepository
     {
         private readonly AppSettings _appSettings;
+        private readonly ConnectionStrings _connectionStrings;
 
-        public PaymentRepository(AppSettings appSettings)
+        public PaymentRepository(AppSettings appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
+            _connectionStrings = connectionStrings;
         }
 
         public async Task<int> CheckValidateStatusPayment(GenEsignatureRq genEsignatureRq)
@@ -28,7 +30,7 @@ namespace App.Repositories.Implementations
             ) THEN 1 ELSE 0 END AS IsExist
             ";
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = _appSettings.strConnString;
+            connection.ConnectionString = _connectionStrings.strConnString;
             sqlCommand = new SqlCommand(strSQL, connection);
             sqlCommand.CommandType = CommandType.Text;
             sqlCommand.Parameters.AddWithValue("ApplicationCode", genEsignatureRq.ApplicationCode);

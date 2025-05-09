@@ -9,11 +9,12 @@ namespace App.Repositories.Implementations
     public class GenEsignatureRepository : IGenEsignatureRepository
     {
         private readonly AppSettings _appSettings;
+        private readonly ConnectionStrings _connectionStrings;
 
-        public GenEsignatureRepository(AppSettings appSettings)
+        public GenEsignatureRepository(AppSettings appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
- 
+            _connectionStrings = connectionStrings;
         }
 
         public async Task<int> MapingOrderAccount(GenEsignatureRq genEsignatureRq)
@@ -28,7 +29,7 @@ namespace App.Repositories.Implementations
             ";
 
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = _appSettings.strConnString;
+            connection.ConnectionString = _connectionStrings.strConnString;
             sqlCommand = new SqlCommand(strSQL, connection);
             sqlCommand.CommandType = CommandType.Text;
             sqlCommand.Parameters.AddWithValue("ApplicationCode", genEsignatureRq.ApplicationCode);
@@ -58,7 +59,7 @@ namespace App.Repositories.Implementations
             ";
 
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = _appSettings.strConnString;
+            connection.ConnectionString = _connectionStrings.strConnString;
             sqlCommand = new SqlCommand(strSQL, connection);
             sqlCommand.CommandType = CommandType.Text;
             sqlCommand.Parameters.AddWithValue("ApplicationCode", genEsignatureRq.ApplicationCode);
@@ -78,7 +79,7 @@ namespace App.Repositories.Implementations
         }
         public async Task GenContract(GenEsignatureRq genEsignatureRq)
         {
-            var connStr = _appSettings.strConnString;
+            var connStr = _connectionStrings.strConnString;
             var sql = @$"{_appSettings.SGCESIGNATURE}.[ESG_SP_GEN_CONTRACT_SGFINANCE]";
 
             await using var connection = new SqlConnection(connStr);
@@ -95,7 +96,7 @@ namespace App.Repositories.Implementations
         }
         public async Task<int> UpDateContractHeader(UpDateContractHeaderRq upDateContractHeaderRq)
         {
-            var connStr = _appSettings.strConnString;
+            var connStr = _connectionStrings.strConnString;
             var sql = $@"
                     UPDATE {_appSettings.SGDIRECT}.[dbo].[AUTO_SALE_POS_HEADER]
                     SET AccountNo = @AccountNo,
@@ -130,7 +131,7 @@ namespace App.Repositories.Implementations
             ";
 
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = _appSettings.strConnString;
+            connection.ConnectionString = _connectionStrings.strConnString;
             sqlCommand = new SqlCommand(strSQL, connection);
             sqlCommand.CommandType = CommandType.Text;
             sqlCommand.Parameters.AddWithValue("ApplicationCode", genEsignatureRq.ApplicationCode);
@@ -170,7 +171,7 @@ namespace App.Repositories.Implementations
             ";
 
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = _appSettings.strConnString;
+            connection.ConnectionString = _connectionStrings.strConnString;
             sqlCommand = new SqlCommand(strSQL, connection);
             sqlCommand.CommandType = CommandType.Text;
             sqlCommand.Parameters.AddWithValue("ApplicationCode", genEsignatureRq.ApplicationCode);

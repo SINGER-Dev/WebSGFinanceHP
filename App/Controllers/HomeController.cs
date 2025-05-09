@@ -19,10 +19,11 @@ namespace App.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly AppSettings _appSettings;
-      
-        public HomeController(ILogger<HomeController> logger, AppSettings appSettings)
+        private readonly ConnectionStrings _connectionStrings;
+        public HomeController(ILogger<HomeController> logger, AppSettings appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
+            _connectionStrings = connectionStrings;
         }
 
         public IActionResult Index()
@@ -36,7 +37,7 @@ namespace App.Controllers
             ViewBag.FullName = HttpContext.Session.GetString("FullName");
 
 
-            using (var connection = new SqlConnection(_appSettings.strConnString3))
+            using (var connection = new SqlConnection(_connectionStrings.strConnString3))
             {
 
                 string sql = @"
@@ -56,7 +57,7 @@ namespace App.Controllers
         [HttpPost]
         public async Task<MsDepartmentViewModel> GetMsDepartment([FromBody] GetMsDepartment _GetMsDepartment)
         {
-            using (var connection = new SqlConnection(_appSettings.strConnString3))
+            using (var connection = new SqlConnection(_connectionStrings.strConnString3))
             {
                 string sql = @" 
                 SELECT [DEP_CODE]
@@ -141,7 +142,7 @@ namespace App.Controllers
 
             List<SearchGetApplicationHistoryRespone> _SearchGetApplicationHistoryResponeMaster = new List<SearchGetApplicationHistoryRespone>();
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = _appSettings.strConnString;
+            connection.ConnectionString = _connectionStrings.strConnString;
             try
             {
                 SqlCommand sqlCommand;
@@ -218,7 +219,7 @@ namespace App.Controllers
                 //if (isWithinPeriod)
                 //{
                     SqlConnection connection = new SqlConnection();
-                    connection.ConnectionString = _appSettings.strConnString;
+                    connection.ConnectionString = _connectionStrings.strConnString;
                     connection.Open();
 
                     GetApplication _GetApplication = new GetApplication();
@@ -374,7 +375,7 @@ namespace App.Controllers
                 Log.Debug(JsonConvert.SerializeObject(_GetApplication));
                 System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls11;
 
-                using (var connection = new SqlConnection(_appSettings.strConnString))
+                using (var connection = new SqlConnection(_connectionStrings.strConnString))
                 {
                     string sql = @$"SELECT app.applicationid,
                                        app.accountno,

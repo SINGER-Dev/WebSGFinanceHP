@@ -15,9 +15,11 @@ namespace App.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly AppSettings _appSettings;
-        public LoginController(ILogger<HomeController> logger, AppSettings appSettings)
+        private readonly ConnectionStrings _connectionStrings;
+        public LoginController(ILogger<HomeController> logger, AppSettings appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
+            _connectionStrings = connectionStrings;
         }
 
         public IActionResult Index()
@@ -33,7 +35,7 @@ namespace App.Controllers
             User _User = new User();
 
             SqlConnection connection = new SqlConnection();
-            connection.ConnectionString = _appSettings.strConnString3;
+            connection.ConnectionString = _connectionStrings.strConnString3;
             connection.Open();
             SqlDataAdapter dtAdapter = new SqlDataAdapter();
 

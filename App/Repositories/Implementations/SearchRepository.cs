@@ -9,10 +9,12 @@ namespace App.Repositories.Implementations
     public class SearchRepository : ISearchRepository
     {
         private readonly AppSettings _appSettings;
+        private readonly ConnectionStrings _connectionStrings;
 
-        public SearchRepository(AppSettings appSettings)
+        public SearchRepository(AppSettings appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
+            _connectionStrings = connectionStrings;
         }
 
         public async Task<List<ApplicationResponeModel>> Search(ApplicationRq applicationRq)
@@ -179,7 +181,7 @@ DROP TABLE #serials;
 DROP TABLE #payment;
 DROP TABLE #base_app;";
 
-            using var connection = new SqlConnection(_appSettings.strConnString);
+            using var connection = new SqlConnection(_connectionStrings.strConnString);
             var parameters = new
             {
                 startdate = applicationRq.startdate,

@@ -33,6 +33,13 @@ builder.Services.AddSingleton(resolver =>
     config.GetSection("AppSettings").Bind(settings);
     return settings;
 });
+builder.Services.AddSingleton(resolver =>
+{
+    var config = resolver.GetRequiredService<IConfiguration>();
+    var settings = new ConnectionStrings();
+    config.GetSection("ConnectionStrings").Bind(settings);
+    return settings;
+});
 builder.Services.AddServiceCollection(builder.Configuration);
 
 //Service
