@@ -7,6 +7,6 @@ public interface IGenEsignatureRepository
     Task<ContractRp> Contract(GenEsignatureRq genEsignatureRq);
     Task GenContract(GenEsignatureRq genEsignatureRq);
     Task<int> UpDateContractHeader(UpDateContractHeaderRq upDateContractHeaderRq);
-    Task<int> CheckDataHeader(GenEsignatureRq genEsignatureRq);
+    Task<CheckDataHeaderRp> CheckDataHeader(GenEsignatureRq genEsignatureRq);
     Task<int> CheckPayment(GenEsignatureRq genEsignatureRq);
 }

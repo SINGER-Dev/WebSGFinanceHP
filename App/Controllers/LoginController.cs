@@ -14,9 +14,9 @@ namespace App.Controllers
     public class LoginController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly AppSettings _appSettings;
+        private readonly AppConfiguration _appSettings;
         private readonly ConnectionStrings _connectionStrings;
-        public LoginController(ILogger<HomeController> logger, AppSettings appSettings, ConnectionStrings connectionStrings)
+        public LoginController(ILogger<HomeController> logger, AppConfiguration appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
             _connectionStrings = connectionStrings;

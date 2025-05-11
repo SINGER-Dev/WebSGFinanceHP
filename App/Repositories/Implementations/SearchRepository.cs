@@ -8,10 +8,10 @@ namespace App.Repositories.Implementations
 {
     public class SearchRepository : ISearchRepository
     {
-        private readonly AppSettings _appSettings;
+        private readonly AppConfiguration _appSettings;
         private readonly ConnectionStrings _connectionStrings;
 
-        public SearchRepository(AppSettings appSettings, ConnectionStrings connectionStrings)
+        public SearchRepository(AppConfiguration appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
             _connectionStrings = connectionStrings;

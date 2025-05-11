@@ -62,6 +62,10 @@
         public string? ApplicationCode { get; set; }
         public string? AccountNo { get; set; }
     }
+    public class TransferStockRq
+    {
+        public string? AppOrderNo { get; set; }
+    }
     
     public class GenEsignatureRq
     {
@@ -72,6 +76,14 @@
         public int IsExist { get; set; } = 0;
         public string? AccountNo { get; set; }
     }
+    public class CheckDataHeaderRp
+    {
+        public int IsExist { get; set; } = 0;
+        public string? AccountNo { get; set; }
+        public string? PosTrackNumber { get; set; }
+        
+    }
+    
     public class ValidatePOSRq
     {
         public string? ApplicationCode { get; set; }

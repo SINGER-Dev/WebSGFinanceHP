@@ -9,10 +9,10 @@ namespace App.Repositories.Implementations
 {
     public class PaymentRepository : IPaymentRepository
     {
-        private readonly AppSettings _appSettings;
+        private readonly AppConfiguration _appSettings;
         private readonly ConnectionStrings _connectionStrings;
 
-        public PaymentRepository(AppSettings appSettings, ConnectionStrings connectionStrings)
+        public PaymentRepository(AppConfiguration appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
             _connectionStrings = connectionStrings;

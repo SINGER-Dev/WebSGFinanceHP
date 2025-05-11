@@ -13,11 +13,11 @@ namespace App.Services.Implementations
     public class StartFlowService : IStartFlowService
     {
         private readonly HttpClient _httpClient;
-        private readonly AppSettings _appSettings;
+        private readonly AppConfiguration _appSettings;
         private readonly IHttpContextAccessor _httpContextAccessor; // Add IHttpContextAccessor
         private readonly IPaymentRepository _repository;
 
-        public StartFlowService(IHttpClientFactory httpClientFactory, AppSettings appSettings, IHttpContextAccessor httpContextAccessor)
+        public StartFlowService(IHttpClientFactory httpClientFactory, AppConfiguration appSettings, IHttpContextAccessor httpContextAccessor)
         {
             _appSettings = appSettings;
             _httpContextAccessor = httpContextAccessor; // Initialize IHttpContextAccessor

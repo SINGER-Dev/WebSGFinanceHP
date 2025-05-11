@@ -8,10 +8,10 @@ namespace App.Repositories.Implementations
 {
     public class GenEsignatureRepository : IGenEsignatureRepository
     {
-        private readonly AppSettings _appSettings;
+        private readonly AppConfiguration _appSettings;
         private readonly ConnectionStrings _connectionStrings;
 
-        public GenEsignatureRepository(AppSettings appSettings, ConnectionStrings connectionStrings)
+        public GenEsignatureRepository(AppConfiguration appSettings, ConnectionStrings connectionStrings)
         {
             _appSettings = appSettings;
             _connectionStrings = connectionStrings;
@@ -119,15 +119,18 @@ namespace App.Repositories.Implementations
             return rowsAffected; // ให้ผลลัพธ์กลับไปให้ Service layer ตัดสินใจ
         }
 
-        public async Task<int> CheckDataHeader(GenEsignatureRq genEsignatureRq)
+        public async Task<CheckDataHeaderRp> CheckDataHeader(GenEsignatureRq genEsignatureRq)
         {
+            var result = new CheckDataHeaderRp();
+
             SqlCommand sqlCommand;
             string strSQL = @$"
-            SELECT CASE WHEN EXISTS (
-                SELECT 1
-                FROM {_appSettings.SGDIRECT}.[AUTO_SALE_POS_HEADER] WITH (NOLOCK)
-                WHERE AppOrderNo = @ApplicationCode
-            ) THEN 1 ELSE 0 END AS IsExist
+            SELECT TOP 1 
+                1 AS IsExist,
+                ISNULL(AccountNo,'') AS AccountNo,
+                ISNULL(PosTrackNumber,'') AS PosTrackNumber
+            FROM {_appSettings.SGDIRECT}.[AUTO_SALE_POS_HEADER] WITH (NOLOCK)
+            WHERE AppOrderNo = @ApplicationCode
             ";
 
             SqlConnection connection = new SqlConnection();
@@ -143,10 +146,12 @@ namespace App.Repositories.Implementations
             connection.Close();
             if (dt.Rows.Count > 0)
             {
-                return Convert.ToInt32(dt.Rows[0]["IsExist"]);
+                result.IsExist = Convert.ToInt32(dt.Rows[0]["IsExist"]);
+                result.AccountNo = dt.Rows[0]["AccountNo"].ToString();
+                result.PosTrackNumber = dt.Rows[0]["PosTrackNumber"].ToString();
             }
 
-            return 0;
+            return result;
         }
         public async Task<int> CheckPayment(GenEsignatureRq genEsignatureRq)
         {

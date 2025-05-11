@@ -10,10 +10,10 @@ namespace App.Services.Implementations
     public class SearchService : ISearchService
     {
         private readonly HttpClient _httpClient;
-        private readonly AppSettings _appSettings;
+        private readonly AppConfiguration _appSettings;
         private readonly IHttpContextAccessor _httpContextAccessor; // Add IHttpContextAccessor
         private readonly ISearchRepository _repository;
-        public SearchService(AppSettings appSettings, IHttpContextAccessor httpContextAccessor, ISearchRepository repository, IHttpClientFactory httpClientFactory)
+        public SearchService(AppConfiguration appSettings, IHttpContextAccessor httpContextAccessor, ISearchRepository repository, IHttpClientFactory httpClientFactory)
         {
             _repository = repository;
             _appSettings = appSettings;

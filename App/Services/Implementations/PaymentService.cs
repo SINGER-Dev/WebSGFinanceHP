@@ -13,11 +13,11 @@ namespace App.Services.Implementations
     public class PaymentService : IPaymentService
     {
         private readonly HttpClient _httpClient;
-        private readonly AppSettings _appSettings;
+        private readonly AppConfiguration _appSettings;
         private readonly IHttpContextAccessor _httpContextAccessor; // Add IHttpContextAccessor
         private readonly IPaymentRepository _repository;
 
-        public PaymentService(IHttpClientFactory httpClientFactory, AppSettings appSettings, IHttpContextAccessor httpContextAccessor, IPaymentRepository repository)
+        public PaymentService(IHttpClientFactory httpClientFactory, AppConfiguration appSettings, IHttpContextAccessor httpContextAccessor, IPaymentRepository repository)
         {
             _repository = repository;
             _appSettings = appSettings;

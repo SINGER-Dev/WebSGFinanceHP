@@ -1,6 +1,6 @@
 ﻿namespace App.Model
 {
-    public class AppSettings
+    public class AppConfiguration
     {
         public string Env { get; set; }
         public string WSCANCEL { get; set; }
@@ -18,6 +18,9 @@
         public string SGCROSSBANK { get; set; }
         public string CORELOAN { get; set; }
         public string WsLos { get; set; }
+        public string WSAUTOSALE_KEY { get; set; }
+        public string WSAUTOSALE { get; set; }
+
     }
     public class ConnectionStrings
     {

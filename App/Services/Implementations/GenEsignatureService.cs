@@ -15,10 +15,10 @@ namespace App.Services.Implementations
     public class GenEsignatureService : IGenEsignatureService
     {
         private readonly HttpClient _httpClient;
-        private readonly AppSettings _appSettings;
+        private readonly AppConfiguration _appSettings;
         private readonly IHttpContextAccessor _httpContextAccessor; // Add IHttpContextAccessor
         private readonly IGenEsignatureRepository _repository;
-        public GenEsignatureService(AppSettings appSettings, IHttpContextAccessor httpContextAccessor, IGenEsignatureRepository repository, IHttpClientFactory httpClientFactory)
+        public GenEsignatureService(AppConfiguration appSettings, IHttpContextAccessor httpContextAccessor, IGenEsignatureRepository repository, IHttpClientFactory httpClientFactory)
         {
             _repository = repository;
             _appSettings = appSettings;
@@ -44,79 +44,57 @@ namespace App.Services.Implementations
                 }
 
                 //เช็ค AUTO_SALE_POS_HEADER มีข้่อมูลหรือยัง
-                int CheckDataHeaderNum = await _repository.CheckDataHeader(genEsignatureRq);
-                if(CheckDataHeaderNum <= 0)
+                CheckDataHeaderRp checkDataHeaderRp = await _repository.CheckDataHeader(genEsignatureRq);
+                if(checkDataHeaderRp.IsExist <= 0)
                 {
                     //หากจ่ายเงินแล้ว แต่ยังไม่มีข้อมูลใน AUTO_SALE_POS_HEADER ให้ทำการ Gen ข้อมูลก่อน
                     await GenAutoSaleHeader(genEsignatureRq);
                 }
 
-                int MapingOrderAccountNum = await _repository.MapingOrderAccount(genEsignatureRq);
-                if (MapingOrderAccountNum > 0)
+                //เช็คว่าสร้างสัญญาหรือยัง
+                ContractRp contractRp = await _repository.Contract(genEsignatureRq);
+                if (contractRp.IsExist <= 0)
                 {
-                    ContractRp contractRp = await _repository.Contract(genEsignatureRq);
-                    if(contractRp.IsExist > 0)
-                    {
-                        //กรณีไม่ได้รับลิงค์สัญญาจริงๆ แต่ข้อมูล Gen ครบหมดแล้ว
-                        result = await GenEsignature(genEsignatureRq);
-                        if(result.Message?.ToUpper() == "SUCCESS.")
-                        {
-                            result.Message = "ส่งค์ลิงค์ลงนามเรียบร้อย โปรดตรวจสอบลิงค์ลงนามอีกครั้ง";
-                        }
-                        else
-                        {
-                            //กรณีจองรายยการไม่สำเร็จ จะไม่ส่งลิงค์ลงนามให้ทำการแก้ไขก่อน
-                            //มีมัญญาแล้วแต่ SMS ไม่ส่ง เพื่อทำการแก้ไข หลังจากนั้นส่ง Esig อีกครั้ง
-                            await TryGenEsignatureWithFix(genEsignatureRq, contractRp, result.Message);
-
-                        }
-                    }
-                    else
-                    {
-                        //กรณีได้รับลิงค์สัญญา แต่ข้อมูล Gen ไม่ครบ
-                        await _repository.GenContract(genEsignatureRq);
-                        result.StatusCode = "200";
-                        result.Message = "แจ้งลูกค้าให้ทำการ Refresh หน้าทำสัญญาอีกครั้ง เพื่อลงนาม";
-                    }   
-                
+                    await _repository.GenContract(genEsignatureRq);
                 }
-                else
-                {
-                    //กรณีไม่ได้รับทั้งลิงค์สัญญาและ ยังไม่ได้ Gen ข้อมูล Contract
-                    result = await GenEsignature(genEsignatureRq);
-                    if (result.Message?.ToUpper() == "SUCCESS.")
-                    {
-                        result.Message = "ส่งค์ลิงค์ลงนามเรียบร้อย โปรดตรวจสอบลิงค์ลงนามอีกครั้ง";
-                    }
-                    else
-                    {
-                        //หากได้รับ respone กลับมา error จะมีสัญญาแล้ว แต่ ให้มาเช็คปัญหาอีกรอบ เพื่อทำการแก้ไขอัตโนมัติ
-                        ContractRp contractRp = await _repository.Contract(genEsignatureRq);
-                        if (contractRp.IsExist > 0)
-                        {
-                            //กรณีไม่ได้รับลิงค์สัญญาจริงๆ แต่ข้อมูล Gen ครบหมดแล้ว
-                            result = await GenEsignature(genEsignatureRq);
-                            if (result.Message?.ToUpper() == "SUCCESS.")
-                            {
-                                result.Message = "ส่งค์ลิงค์ลงนามเรียบร้อย โปรดตรวจสอบลิงค์ลงนามอีกครั้ง";
-                            }
-                            else
-                            {
-                                //กรณีจองรายยการไม่สำเร็จ จะไม่ส่งลิงค์ลงนามให้ทำการแก้ไขก่อน
-                                //มีมัญญาแล้วแต่ SMS ไม่ส่ง เพื่อทำการแก้ไข หลังจากนั้นส่ง Esig อีกครั้ง
-                                await TryGenEsignatureWithFix(genEsignatureRq, contractRp, result.Message);
-                            }
-                        }
-                        else
-                        {
-                            //กรณีได้รับลิงค์สัญญา แต่ข้อมูล Gen ไม่ครบ
-                            await _repository.GenContract(genEsignatureRq);
-                            result.StatusCode = "200";
-                            result.Message = "แจ้งลูกค้าให้ทำการ Refresh หน้าทำสัญญาอีกครั้ง เพื่อลงนาม";
-                        }
 
+                //เช็ค ACCOUNT CONTRACTNO ที่ HEADER ยังไม่มีข้อมูลให้อัพเดท
+                if (checkDataHeaderRp.AccountNo == "")
+                {
+                    //ให้ทำการ Update Contract และ AccountNo ที่ AUTO_SALE_HEADERR
+                    UpDateContractHeaderRq upDateContractHeaderRq = new UpDateContractHeaderRq();
+                    upDateContractHeaderRq.AccountNo = contractRp.AccountNo;
+                    upDateContractHeaderRq.ApplicationCode = genEsignatureRq.ApplicationCode;
+                    await _repository.UpDateContractHeader(upDateContractHeaderRq);
+                    await GenAutoSaleHeader(genEsignatureRq);
+                }
+
+                //หากยังไม่ได้จอง
+                if (checkDataHeaderRp.PosTrackNumber == "")
+                {
+                    //ให้ทำการ Update Contract และ AccountNo ที่ AUTO_SALE_HEADERR
+                    TransferStockRq transferStockRq = new TransferStockRq();
+                    transferStockRq.AppOrderNo = genEsignatureRq.ApplicationCode;
+                    MessageReturn messageReturn = await TransferStock(transferStockRq);
+                    if(messageReturn.StatusCode != "200")
+                    {
+                        result.StatusCode = "500";
+                        result.Message = messageReturn.Message;
+                        return result;
                     }
                 }
+
+                //กรณีไม่ได้รับลิงค์สัญญาจริงๆ แต่ข้อมูล Gen ครบหมดแล้ว แต่ถ้าไม่ใช่ STL เช็๕ว่ามีการสร้างลิงค์ยัง สร้างแล้วแต่ลงนามไม่ได้ให้ gencontract แล้ว แจ้งเขาได้เลย 
+                result = await GenEsignature(genEsignatureRq);
+                if (result.Message?.ToUpper() != "SUCCESS.")
+                {
+                    result.StatusCode = "500";
+                    result.Message = result.Message;
+                    return result;
+                }
+
+                result.StatusCode = "200";
+                result.Message = "ส่งค์ลิงค์ลงนามเรียบร้อย โปรดตรวจสอบลิงค์ลงนามอีกครั้ง";
             }
             catch (SqlException ex)
             {
@@ -220,7 +198,54 @@ namespace App.Services.Implementations
             Log.Debug("RETURN : {Result}", JsonConvert.SerializeObject(result));
             return result;
         }
+        public async Task<MessageReturn> TransferStock(TransferStockRq transferStockRq)
+        {
+            var session = _httpContextAccessor.HttpContext?.Session;
+            var empCode = session?.GetString("EMP_CODE") ?? "UNKNOWN";
+            var fullName = session?.GetString("FullName") ?? "UNKNOWN";
 
+            Log.Debug("OrderID: {OrderID} | Status: REQUEST | Desc: {Desc} | Type: {Type}",
+                transferStockRq.AppOrderNo,
+                $"By {empCode} | {fullName} | {JsonConvert.SerializeObject(transferStockRq)}",
+                "GenEsignature");
+
+            var result = new MessageReturn();
+
+            try
+            {
+
+                string jsonBody = JsonConvert.SerializeObject(transferStockRq);
+                var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
+                _httpClient.DefaultRequestHeaders.Remove("apikey"); // กันค่าเดิมซ้ำซ้อน
+                _httpClient.DefaultRequestHeaders.Add("apikey", _appSettings.WSAUTOSALE_KEY);
+
+                var url = $"{_appSettings.WSAUTOSALE}/autosale/v1/TransferStock";
+                var response = await _httpClient.PostAsync(url, content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Log.Debug("API RESPONSE : {Response}", responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    result = JsonConvert.DeserializeObject<MessageReturn>(responseContent) ?? new MessageReturn();
+                }
+                else
+                {
+                    result.StatusCode = ((int)response.StatusCode).ToString();
+                    result.Message = "Error calling GenEsignature API";
+                }
+            }
+            catch (Exception ex)
+            {
+                result.StatusCode = "500";
+                result.Message = ex.Message;
+                Log.Error(ex, "GenEsignature Exception");
+            }
+
+            Log.Debug("RETURN : {Result}", JsonConvert.SerializeObject(result));
+            return result;
+        }
         public async Task<MessageReturn> GenAutoSaleHeader(GenEsignatureRq genEsignatureRq)
         {
             var session = _httpContextAccessor.HttpContext?.Session;

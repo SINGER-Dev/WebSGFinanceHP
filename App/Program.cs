@@ -29,7 +29,7 @@ builder.Services.AddScoped<LogResponseOnResultFilterAttribute>();
 builder.Services.AddSingleton(resolver =>
 {
     var config = resolver.GetRequiredService<IConfiguration>();
-    var settings = new AppSettings();
+    var settings = new AppConfiguration();
     config.GetSection("AppSettings").Bind(settings);
     return settings;
 });
