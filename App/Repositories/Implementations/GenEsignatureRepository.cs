@@ -98,7 +98,7 @@ namespace App.Repositories.Implementations
         {
             var connStr = _connectionStrings.strConnString;
             var sql = $@"
-                    UPDATE {_appSettings.SGDIRECT}.[dbo].[AUTO_SALE_POS_HEADER]
+                    UPDATE {_appSettings.SGDIRECT}.[AUTO_SALE_POS_HEADER]
                     SET AccountNo = @AccountNo,
                         ContractNo = @AccountNo
                     WHERE AppOrderNo = @AppOrderNo";
