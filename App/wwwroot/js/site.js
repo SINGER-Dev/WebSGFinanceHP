@@ -482,3 +482,57 @@ function checkSession() {
         }
     });
 }
+function copyCustomMessage(el) {
+    const url = el.getAttribute("data-url");
+    const pincode = el.getAttribute("data-pincode");
+
+    const message = `รหัสชุดที่ 1 (PIN) ของท่านคือ ${pincode} สำหรับการยืนยันลงนามสัญญาเช่าซื้อ ตามลิงค์นี้ ${url}`;
+    copyText(message, "คัดลอกลิงค์ลงนามสัญญาแล้ว!");
+}
+
+function copyPaymentMessage(el) {
+    const url = el.getAttribute("data-shorturl");
+    copyText(url, "คัดลอกลิงค์ชำระเงินแล้ว!");
+}
+
+// ✅ ฟังก์ชันกลาง ใช้ Clipboard API หรือ fallback ได้
+function copyText(text, successMessage) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        // Browser ใหม่ (ต้อง HTTPS)
+        navigator.clipboard.writeText(text).then(() => {
+            alert(successMessage);
+        }).catch(err => {
+            fallbackCopyText(text, successMessage);
+        });
+    } else {
+        // Browser เก่า → fallback
+        fallbackCopyText(text, successMessage);
+    }
+}
+
+function fallbackCopyText(text, successMessage) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+
+    textarea.style.position = "fixed";
+    textarea.style.top = "0";
+    textarea.style.left = "0";
+    textarea.style.opacity = "0";
+
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            alert(successMessage);
+        } else {
+            alert("ไม่สามารถคัดลอกข้อความได้");
+        }
+    } catch (err) {
+        alert("เกิดข้อผิดพลาดในการคัดลอก");
+    }
+
+    document.body.removeChild(textarea);
+}

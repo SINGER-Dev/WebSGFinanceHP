@@ -1,4 +1,6 @@
-﻿namespace App.Model
+﻿using System;
+
+namespace App.Model
 {
     public class ApplicationResponeModel
     {
@@ -39,7 +41,9 @@
         public string? flag_status { get; set; }
         public string? AMT_SHP_PAY { get; set; }
         public string? SumAmount { get; set; }
-
+        public string? URL { get; set; }
+        public string? PinCode { get; set; }
+        public string? SHORT_URL { get; set; }
     }
 
 

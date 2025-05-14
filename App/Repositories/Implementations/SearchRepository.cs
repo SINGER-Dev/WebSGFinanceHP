@@ -50,18 +50,21 @@ SELECT
     h.InvoiceNo,
 	ae.refcode,
     LEFT(ae.ou_code, 3) AS OU_Code,
-    ae.loantypecate
+    ae.loantypecate,
+    l.SHORT_URL
 INTO #base_app
 FROM {_appSettings.DATABASEK2}.[application] a WITH (NOLOCK)
 JOIN {_appSettings.DATABASEK2}.[applicationextend] ae WITH (NOLOCK) ON ae.applicationid = a.applicationid
 LEFT JOIN {_appSettings.SGDIRECT}.[auto_sale_pos_header] h WITH (NOLOCK) ON h.apporderno = a.applicationcode
+LEFT JOIN {_appSettings.SGDIRECT}.[GEN_SHORT_LINK] l WITH (NOLOCK) ON l.REF_ID = a.applicationcode
 WHERE a.applicationdate >= @TodayStart AND a.applicationdate < @TomorrowStart
 AND ae.ou_code LIKE 'STL%';
 
 -- STEP 1: สร้าง Temp Contract
-SELECT c.documentno, c.signedstatus, c.statusreceived
+SELECT c.documentno, c.signedstatus, c.statusreceived, mp.URL, mp.PinCode
 INTO #contracts_temp
 FROM {_appSettings.SGCESIGNATURE}.contracts c WITH (NOLOCK)
+JOIN {_appSettings.SGCESIGNATURE}.MapingOrderAccount mp WITH (NOLOCK) ON c.documentno = mp.ApplicationCode
 JOIN #base_app b ON c.documentno = b.applicationcode
 WHERE c.createdat >= @TodayStart AND c.createdat < @TomorrowStart;
 
@@ -151,7 +154,11 @@ SELECT
     ISNULL(b.InvoiceNo,'') AS InvoiceNo,
     ISNULL(p.flag_status,'') as flag_status,
     ISNULL(p.AMT_SHP_PAY,0) as AMT_SHP_PAY,
-	ISNULL(p.SumAmount,0) as SumAmount
+	ISNULL(p.SumAmount,0) as SumAmount,
+    ISNULL(con.URL,'') as URL,
+    ISNULL(con.PinCode,'') as PinCode,
+    ISNULL(b.SHORT_URL,'') as SHORT_URL
+
 FROM #base_app b
 JOIN {_appSettings.DATABASEK2}.[customer] cus WITH (NOLOCK) ON cus.customerid = b.customerid
 LEFT JOIN {_appSettings.DATABASEK2}.[application_esig_status] c WITH (NOLOCK) ON c.application_code = b.applicationcode
