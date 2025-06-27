@@ -1,6 +1,8 @@
 ﻿using App.Model;
 using Azure.Core;
+using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Identity.Client;
 using System.Data;
 using System.Diagnostics.Contracts;
 
@@ -77,6 +79,30 @@ namespace App.Repositories.Implementations
 
             return result;
         }
+        public async Task<GenMappingAccountRp> GenMapingOrderAccount(GenMappingAccountRq genMappingAccountRq)
+        {
+
+
+            var connStr = _connectionStrings.strConnString;
+            var sql = @$"{_appSettings.SGCESIGNATURE}.[ESG_SP_PREPARE_DATA]";
+
+            await using var connection = new SqlConnection(connStr);
+
+            var result = await connection.QueryFirstOrDefaultAsync<GenMappingAccountRp>(
+                            sql,
+                            new
+                            {
+                                ApplicationCode = genMappingAccountRq.ApplicationCode,
+                                OrderNumber = genMappingAccountRq.OrderNumber,
+                                ConfirmCode = genMappingAccountRq.ConfirmCode,
+                                Pin = genMappingAccountRq.Pin
+                            },
+                            commandType: CommandType.StoredProcedure
+                        );
+
+            return result;
+        }
+        
         public async Task GenContract(GenEsignatureRq genEsignatureRq)
         {
             var connStr = _connectionStrings.strConnString;
@@ -128,7 +154,9 @@ namespace App.Repositories.Implementations
             SELECT TOP 1 
                 1 AS IsExist,
                 ISNULL(AccountNo,'') AS AccountNo,
-                ISNULL(PosTrackNumber,'') AS PosTrackNumber
+                ISNULL(PosTrackNumber,'') AS PosTrackNumber,
+                ISNULL([DeliveryPassword],'') AS DeliveryPassword,
+                ISNULL([PINCode],'') AS PINCode
             FROM {_appSettings.SGDIRECT}.[AUTO_SALE_POS_HEADER] WITH (NOLOCK)
             WHERE AppOrderNo = @ApplicationCode
             ";

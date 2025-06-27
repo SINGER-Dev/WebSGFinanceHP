@@ -72,7 +72,7 @@
                                 {
                                     <i class="StartFlow fa-solid fa-paper-plane" data-refcode="@result.RefCode" style="cursor: pointer;color: coral;"></i>
                                 }
-                                
+
                             }
                             @if (@result.datenowcheck != "1")
                             {
@@ -104,7 +104,10 @@
                                     {
                                         <span class="badge bg-danger">ชำระเงินไม่ครบ</span>
                                         <i class="LinkPayment fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
-                                        <i class="fa-solid fa-copy" data-shorturl="@result.SHORT_URL" data-pincode="@result.PinCode" style="cursor: pointer;color: coral;" onclick="copyPaymentMessage(this)"></i>
+                                        if(result.SHORT_URL != "")
+                                        {
+                                            <i class="fa-solid fa-copy" data-shorturl="@result.SHORT_URL" data-pincode="@result.PinCode" style="cursor: pointer;color: coral;" onclick="copyPaymentMessage(this)"></i>
+                                        }
                                     }
                                     else if (Convert.ToDecimal(@result.SumAmount) == Convert.ToDecimal(@result.AMT_SHP_PAY))
                                     {
@@ -115,7 +118,10 @@
                                 {
                                     <span class="badge bg-secondary">รอการชำระเงิน</span>
                                     <i class="LinkPayment fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
-                                    <i class="fa-solid fa-copy" data-shorturl="@result.SHORT_URL" style="cursor: pointer;color: coral;" onclick="copyPaymentMessage(this)"></i>
+                                    if (result.SHORT_URL != "")
+                                    {
+                                        <i class="fa-solid fa-copy" data-shorturl="@result.SHORT_URL" data-pincode="@result.PinCode" style="cursor: pointer;color: coral;" onclick="copyPaymentMessage(this)"></i>
+                                    }
                                 }
                             }
                             

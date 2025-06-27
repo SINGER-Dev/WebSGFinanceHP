@@ -51,6 +51,21 @@ namespace App.Services.Implementations
                     await GenAutoSaleHeader(genEsignatureRq);
                 }
 
+                //เช็คว่ามีการ Maping Order กับ Account หรือยัง
+                int mapingOrderAccountNum = await _repository.MapingOrderAccount(genEsignatureRq);
+                if (mapingOrderAccountNum <= 0)
+                {
+                    
+                    GenMappingAccountRq genMapingOrderAccount = new GenMappingAccountRq();
+                    genMapingOrderAccount.ApplicationCode = genEsignatureRq.ApplicationCode;
+                    genMapingOrderAccount.OrderNumber = genEsignatureRq.ApplicationCode;
+                    genMapingOrderAccount.ConfirmCode = checkDataHeaderRp.DeliveryPassword;
+                    genMapingOrderAccount.Pin = checkDataHeaderRp.PINCode;
+
+                    await _repository.GenMapingOrderAccount(genMapingOrderAccount);
+                }
+
+
                 //เช็คว่าสร้างสัญญาหรือยัง
                 ContractRp contractRp = await _repository.Contract(genEsignatureRq);
                 if (contractRp.IsExist <= 0)

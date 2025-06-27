@@ -9,4 +9,5 @@ public interface IGenEsignatureRepository
     Task<int> UpDateContractHeader(UpDateContractHeaderRq upDateContractHeaderRq);
     Task<CheckDataHeaderRp> CheckDataHeader(GenEsignatureRq genEsignatureRq);
     Task<int> CheckPayment(GenEsignatureRq genEsignatureRq);
+    Task<GenMappingAccountRp> GenMapingOrderAccount(GenMappingAccountRq genMappingAccountRq);
 }

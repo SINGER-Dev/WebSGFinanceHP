@@ -1,4 +1,6 @@
-﻿namespace App.Model
+﻿using Microsoft.AspNetCore.Mvc.ApplicationModels;
+
+namespace App.Model
 {
     public class requestBodyValue
     {
@@ -81,9 +83,11 @@
         public int IsExist { get; set; } = 0;
         public string? AccountNo { get; set; }
         public string? PosTrackNumber { get; set; }
-        
+        public string? DeliveryPassword { get; set; }
+        public string? PINCode { get; set; }
+
     }
-    
+
     public class ValidatePOSRq
     {
         public string? ApplicationCode { get; set; }
@@ -199,5 +203,17 @@
         public string? getPaid { get; set; }
         public string? FirstPaymentAmount { get; set; }
 
+    }
+    public class GenMappingAccountRp
+    {
+        public string AccountNo { get; set; }
+        public string Link { get; set; }
+    }
+    public class GenMappingAccountRq
+    {
+        public string ApplicationCode { get; set; }
+        public string OrderNumber { get; set; }
+        public string ConfirmCode { get; set; }
+        public string Pin { get; set; }
     }
 }
