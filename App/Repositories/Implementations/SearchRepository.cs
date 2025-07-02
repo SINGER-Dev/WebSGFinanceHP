@@ -119,24 +119,29 @@ GROUP BY s.apporderno;
 CREATE CLUSTERED INDEX IX_serials_apporderno ON #serials(apporderno);
 
 -- STEP 3: Payment - ใช้ EXISTS แทน JOIN เพื่อประสิทธิภาพ
-SELECT b.applicationcode,
-       p.ref1,
-       p.flag_status,
-       p.amt_shp_pay,
-       bank.SumAmount
+SELECT 
+    b.applicationcode,
+    p.ref1,
+    p.flag_status,
+    p.amt_shp_pay,
+    bank.SumAmount
 INTO #payment
 FROM #base_app b
-JOIN {_appSettings.SGCROSSBANK}.[sg_payment_realtime] p WITH (NOLOCK) ON b.ref4 = p.ref1
-LEFT JOIN (
+JOIN {_appSettings.SGCROSSBANK}.[sg_payment_realtime] p WITH (NOLOCK)
+    ON b.ref4 = p.ref1
+JOIN (
     SELECT Ref1, SUM(TRY_CAST(Amount AS DECIMAL(18, 2))) AS SumAmount
     FROM {_appSettings.SGCROSSBANK}.[BANK_TRANSACTION] WITH (NOLOCK)
     WHERE ISNUMERIC(Amount) = 1
+        AND Amount IS NOT NULL
     GROUP BY Ref1
-) bank ON bank.Ref1 = p.ref1
-WHERE p.flag_status = 'Y' 
+) bank ON p.ref1 = bank.Ref1
+WHERE 
+    p.flag_status = 'Y' 
     AND b.ref4 IS NOT NULL 
-    AND p.Customername IS NOT NULL 
     AND b.ref4 <> '';
+
+
 
 CREATE CLUSTERED INDEX IX_payment_applicationcode ON #payment(applicationcode);
 
