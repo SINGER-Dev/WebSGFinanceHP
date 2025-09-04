@@ -38,6 +38,7 @@ namespace App.Model
         public string? DeliveryDate { get; set; }
         public string? Ref4 { get; set; }
         public string? InvoiceNo { get; set; }
+        public string? PosTrackNumber { get; set; }
         public string? flag_status { get; set; }
         public string? AMT_SHP_PAY { get; set; }
         public string? SumAmount { get; set; }

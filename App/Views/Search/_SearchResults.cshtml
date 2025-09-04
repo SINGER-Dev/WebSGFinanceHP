@@ -124,7 +124,7 @@
                                     }
                                 }
                             }
-                            
+
                         </td>
 
 
@@ -156,7 +156,20 @@
                                 @if (result.ProductSerialNo.Trim() != "")
                                 {
                                     <i class="GenEsignature fa-solid fa-paper-plane" data-applicationcode="@result.ApplicationCode" style="cursor: pointer;color: coral;"></i>
-                                    <i class="fa-solid fa-copy" data-url="@result.URL" data-pincode="@result.PinCode" style="cursor: pointer;color: coral;" onclick="copyCustomMessage(this)"></i>
+
+                                    @if (result.PosTrackNumber.Trim() != "")
+                                    {
+                                        <i class="fa-solid fa-copy" data-url="@result.URL" data-pincode="@result.PinCode" style="cursor: pointer;color: coral;" onclick="copyCustomMessage(this)"></i>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning" style="color:#000">รอจองรายงานขาย.</span>
+                                    }
+
+                                    @if (result.InvoiceNo.Trim() == "")
+                                    {
+                                        <span class="badge bg-warning" style="color:#000">รอรายงานขาย.</span>
+                                    }
                                 }
                                 else
                                 {
