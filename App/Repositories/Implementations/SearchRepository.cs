@@ -214,8 +214,9 @@ SELECT
     ISNULL(p.SumAmount,0) as SumAmount,
     ISNULL(con.URL,'') as URL,
     ISNULL(con.PinCode,'') as PinCode,
-    ISNULL(b.SHORT_URL,'') as SHORT_URL
-
+    ISNULL(b.SHORT_URL,'') as SHORT_URL,
+    ISNULL(b.PosTrackNumber,'') as PosTrackNumber
+    
 FROM #base_app b
 JOIN FilteredCustomers cus ON cus.customerid = b.customerid
 LEFT JOIN {_appSettings.DATABASEK2}.[application_esig_status] c WITH (NOLOCK) ON c.application_code = b.applicationcode
